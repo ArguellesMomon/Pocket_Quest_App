@@ -1,0 +1,32 @@
+{
+  "backgrounds": [
+    {
+      "id": "daydream",
+      "prompt": "Create a landscape 3:2 wide background illustration for a cute virtual pet mobile game. A tiny dream garden with lavender pink rounded trees at the far left and far right, warm cream peach sky, fluffy white clouds, sun like a soft apricot circle upper left, lilac distant hills. Broad flat pale peach sandy clearing in the bottom half, totally empty center bottom for a pet sprite. Small daisies along edges. Soft hand painted pixel-inspired cozy indie game style, charming clean chunky shapes with a few pixel step edges and soft outlined detail, textured lightly, polished illustrative quality. Dominant lavender, coral peach, butter yellow, sky blue, very little green. No characters, no people, no pets, no words, no buildings, no UI, no border. Composition remains readable at 340x190. Fill whole canvas opaque.",
+      "source": "assets/shop/source/daydream.png",
+      "runtime": "public/backgrounds/daydream.webp"
+    },
+    {
+      "id": "sunset",
+      "prompt": "Create a landscape 3:2 wide background illustration for a cute virtual pet mobile game. Peach sunset beach with coral orange sunset sky and a glowing sun upper left, lilac pink ocean behind, rounded pastel palm trees at far edges, seashells and little starfish only along corners. Broad flat warm pale apricot sand clearing filling bottom half, totally empty center bottom for a pet sprite. Soft hand painted pixel-inspired cozy indie game style, charming clean chunky shapes with some pixel step edges and softly outlined detail, textured lightly, polished illustration. Dominant coral peach, pink, lavender, butter yellow, very little green. No characters, people, pets, words, buildings, UI, border. Readable at 340x190. Fill whole canvas opaque.",
+      "source": "assets/shop/source/sunset.png",
+      "runtime": "public/backgrounds/sunset.webp"
+    },
+    {
+      "id": "cloud",
+      "prompt": "Create a landscape 3:2 wide background illustration for a cute virtual pet mobile game. A magical cotton candy cloud terrace floating in the sky. Huge fluffy pink white clouds at far left and far right, lavender sky fading to soft blue, whimsical tiny gold stars and distant rainbow arch near upper left. Broad flat pale pink lilac cloud terrace filling the bottom half, totally empty center bottom for pet sprite. Soft hand painted pixel-inspired cozy indie game style, charming chunky shapes with some pixel step edges and softly outlined detail, light texture, polished illustration. Dominant periwinkle, pink, cream, butter yellow. No characters, people, pets, words, buildings, UI, border. Readable at 340x190. Fill whole canvas opaque.",
+      "source": "assets/shop/source/cloud.png",
+      "runtime": "public/backgrounds/cloud.webp"
+    },
+    {
+      "id": "night",
+      "prompt": "Create a landscape 3:2 wide background illustration for a cute virtual pet mobile game. A magical starlit garden, deep plum violet sky with many small golden twinkling stars and a crescent moon upper left, rounded purple pink trees at far left and right, distant periwinkle rolling hills, little warm glowing mushrooms on far edges. Broad flat pale lavender clearing filling the bottom half, totally empty center bottom for a pet sprite. Soft hand painted pixel-inspired cozy indie game style, charming clean chunky shapes with some pixel step edges and soft outlined detail, light texture, polished illustrative quality. Dominant purple, lavender, dusky pink, golden light, no green. No characters, people, pets, words, buildings, UI, border. Composition readable at 340x190. Fill whole canvas opaque.",
+      "source": "assets/shop/source/night.png",
+      "runtime": "public/backgrounds/night.webp"
+    }
+  ],
+  "items": {
+    "prompt": "Create ONE transparent game-item atlas, landscape aspect ratio 3:2, precisely 3 equal columns by 2 equal rows, six separate objects each centered and fully contained in its own equal cell with generous transparent gutters. NO gridlines or background. Reading order: top left wicker basket filled with pink red blueberries and tiny leaf; top middle lavender ceramic cup of moonmilk with crescent moon motif and gentle steam; top right chunky golden yellow yarn ball with a curled loose yarn end; bottom left purple closed storybook with gold star on cover and cream pages; bottom middle leafy fern in a peach ceramic pot; bottom right charming gold and plum firefly lantern with glowing amber light inside. Cute cozy indie virtual pet game art to match fluffy cat and dog sprites: clean hand-drawn cartoon shapes, smooth subtle shading, warm dark brown outlines, light pixel-inspired stepped accents, polished toy-like collectible objects. Big readable silhouettes, gorgeous little highlights, confident outline. No text, letters, numbers, labels, characters or UI. Each object isolated against fully transparent background. All objects the same visual scale. Exact arrangement is vital for atlas slicing.",
+    "source": "assets/shop/source/items.png"
+  }
+}

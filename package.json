@@ -1,0 +1,40 @@
+{
+  "name": "pocket-quest",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview --host 127.0.0.1",
+    "test": "node --test tests/game.test.js tests/database.test.js tests/companions.test.js",
+    "test:e2e": "playwright test",
+    "db:migrate": "node --env-file=.env.local scripts/migrate.mjs",
+    "icons": "node scripts/icons.mjs",
+    "sprites:pack": "node scripts/pack-sprites.mjs",
+    "shop:pack": "node scripts/pack-shop.mjs",
+    "format": "prettier --write src shared server api scripts tests neon vite.config.js playwright.config.js index.html README.md"
+  },
+  "dependencies": {
+    "@fontsource/dm-sans": "^5.3.0",
+    "@fontsource/silkscreen": "^5.3.0",
+    "@fontsource/space-grotesk": "^5.3.0",
+    "@neondatabase/auth": "^0.6.0-beta",
+    "@vercel/functions": "^3.9.11",
+    "jose": "^6.2.12",
+    "lucide-react": "^1.55.0",
+    "pg": "^8.23.1",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "react-router-dom": "^6.26.2"
+  },
+  "devDependencies": {
+    "@electric-sql/pglite": "^0.5.9",
+    "@playwright/test": "^1.64.0",
+    "@vitejs/plugin-react": "^4.3.1",
+    "prettier": "^3.9.10",
+    "sharp": "^0.35.5",
+    "vite": "^5.4.1",
+    "vite-plugin-pwa": "^0.20.5"
+  }
+}
