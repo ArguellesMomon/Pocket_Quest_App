@@ -54,9 +54,11 @@ The dedicated Neon project is `Pocket-Quest` (`morning-thunder-40770002`), AWS S
 - Visual snapshots cover welcome, Today in both themes, Habitat, Market, Journey, background cards, scene previews, and a purchased Peach beach. Shop categories fit without list scrolling at 320×568 and 390×844.
 - Low-stat browser fixtures verify the actual sleepy, lonely, hungry, and happy atlas rows; scene captures are saved beside the phone previews.
 - The production PWA test verifies a guest adventure can reload, complete a quest, and retain its theme and rewards while fully offline. Fonts and artwork are included in the offline cache.
+- A real two-version service worker fixture verifies a new deployment takes control of an existing legacy app without closing tabs, resetting guest rewards, or interrupting an unsaved quest draft.
 - The live cloud browser test simulates committed care with a lost response, verifies the banner stays hidden, reloads, lets background retry finish, and verifies the same operation ID is reused and inventory is consumed once.
 - Opt-in live cloud tests exercise email signup/sign-in/sign-out, JWT validation, session restoration, atomic reward sync, and rejected unauthorized requests using reserved `.invalid` QA email addresses. QA accounts remain in this development project; these tests do not send email.
 - Password recovery and email-code interfaces are implemented, but actual inbox delivery has not been tested. Configure a production mail provider and verify delivery before a public account launch. See [Neon's production checklist](https://neon.com/docs/auth/production-checklist).
-- Vercel API functions and rewrites are prepared. The app has not been deployed to a public URL during this local redesign.
+- Vercel API functions and rewrites are prepared and running on the user's deployment.
+- The user deployed the app to `https://pocketquest-lime.vercel.app`. That exact origin is registered with Neon Auth. PWA updates activate new workers and caches automatically using script registration; the app does not force a mid-form reload. Refresh loads the latest UI without clearing guest progress.
 
 No third-party analytics, AI calls, subscriptions, or messaging integrations were added.

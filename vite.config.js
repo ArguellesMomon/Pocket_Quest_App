@@ -10,8 +10,13 @@ export default defineConfig(({ mode }) => ({
     localApi(loadEnv(mode, process.cwd(), '')),
     react(),
     VitePWA({
-      registerType: 'prompt',
+      // Activate new caches without trapping existing tabs on an old build.
+      // Script registration avoids forcing a reload while someone edits a quest.
+      registerType: 'autoUpdate',
+      injectRegister: 'script',
       workbox: {
+        skipWaiting: true,
+        clientsClaim: true,
         globPatterns: ['**/*.{js,css,html,png,svg,webp,woff,woff2}'],
         navigateFallbackDenylist: [/^\/api\//],
       },
