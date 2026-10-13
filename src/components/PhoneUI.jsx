@@ -104,7 +104,7 @@ export function PetScene({ large = false }) {
     </section>
   );
 }
-export function QuickCare({ focus = false }) {
+export function QuickCare({ focus = false, onFocus }) {
   const { state, user, now, act, busy } = useGame();
   const [drawer, setDrawer] = useState(null);
   let remaining = null;
@@ -144,7 +144,7 @@ export function QuickCare({ focus = false }) {
           </span>
         </button>
         {focus && (
-          <button aria-label="Focus" onClick={() => setDrawer('focus')}>
+          <button aria-label="Focus" onClick={() => (onFocus ? onFocus() : setDrawer('focus'))}>
             <Icon name="clock" size={23} />
             <span>
               Focus

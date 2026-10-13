@@ -1,6 +1,13 @@
 import { useEffect, useId, useRef } from 'react';
 import Icon from './Icon';
-export default function Dialog({ title, subtitle, children, onClose, wide = false }) {
+export default function Dialog({
+  title,
+  subtitle,
+  children,
+  onClose,
+  wide = false,
+  headerContent,
+}) {
   const ref = useRef(),
     id = useId();
   useEffect(() => {
@@ -39,7 +46,10 @@ export default function Dialog({ title, subtitle, children, onClose, wide = fals
     >
       <header className="dialog-head">
         <div>
-          <h2 id={id}>{title}</h2>
+          <h2 id={id} className={headerContent ? 'sr-only' : undefined}>
+            {title}
+          </h2>
+          {headerContent}
           {subtitle && <p>{subtitle}</p>}
         </div>
         <button className="icon-button" aria-label="Close dialog" onClick={onClose}>

@@ -1,5 +1,6 @@
 import game from '../api/game.js';
 import auth from '../api/auth.js';
+import chat from '../api/chat.js';
 export function localApi(environment) {
   for (const [key, value] of Object.entries(environment))
     if (!key.startsWith('VITE_') && !process.env[key]) process.env[key] = value;
@@ -9,9 +10,11 @@ export function localApi(environment) {
       const handler =
         path === '/api/game'
           ? game
-          : path === '/api/auth' || path.startsWith('/api/auth/')
-            ? auth
-            : null;
+          : path === '/api/chat'
+            ? chat
+            : path === '/api/auth' || path.startsWith('/api/auth/')
+              ? auth
+              : null;
       if (!handler) return next();
       res.status = (status) => {
         res.statusCode = status;

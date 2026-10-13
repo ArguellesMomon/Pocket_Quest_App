@@ -1,5 +1,6 @@
 {
   "regions": ["sin1"],
+  "functions": { "api/chat.js": { "maxDuration": 60 } },
   "rewrites": [
     { "source": "/api/auth/:path*", "destination": "/api/auth?path=:path*" },
     { "source": "/((?!api/).*)", "destination": "/index.html" }

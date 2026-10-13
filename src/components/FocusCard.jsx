@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { useGame } from '../context';
 import { completed } from '../../shared/game';
 import Icon from './Icon';
-export default function FocusCard() {
+export default function FocusCard({ initialTaskId = '' }) {
   const { state, user, now, act, toast, busy } = useGame();
   const key = `pocketquest-focus:${user?.id || 'guest'}`;
   const [focus, setFocus] = useState(() => {
@@ -12,15 +12,19 @@ export default function FocusCard() {
           minutes: 25,
           remaining: 1500,
           end: null,
-          taskId: '',
+          taskId: initialTaskId,
           started: false,
         }
       );
     } catch {
-      return { minutes: 25, remaining: 1500, end: null, taskId: '', started: false };
+      return { minutes: 25, remaining: 1500, end: null, taskId: initialTaskId, started: false };
     }
   });
   const notified = useRef(false);
+  useEffect(() => {
+    if (initialTaskId)
+      setFocus((current) => (current.started ? current : { ...current, taskId: initialTaskId }));
+  }, [initialTaskId]);
   const seconds = focus.end ? Math.max(0, Math.ceil((focus.end - now) / 1000)) : focus.remaining;
   const done = focus.started && seconds === 0;
   useEffect(() => {

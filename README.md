@@ -16,10 +16,12 @@ Open **http://127.0.0.1:5175**. Guest mode works without database credentials an
 ## What works
 
 - Compact Today, Quests, Pets, Shop, Stats, and Settings screens; longer lists use pagination and category tabs.
+- Today uses a companion world, one-quest deck, tap-through queue and wins, daily treasure trail, inline reward reveals, focused timers, and optional sound/haptic feedback. See [the Today design and checks](docs/TODAY-PLAY.md).
 - One-time quests and daily rituals, effort-based rewards, due dates, categories, search, sorting, editing, and removal.
 - Daily three-quest bonus, timezone-aware resets and streaks, companion levels, and six earned milestones.
 - Sixteen purchasable items, including five foods, toys, room decor, and illustrated backgrounds. Shop pages show four items at a time. A free Dream garden is always available.
 - Six animated companions with stat-driven moods, feeding/play reactions, celebration, and bounded idle stat decay. Chami combines eight supplied frames with 24 new mood poses; Finn uses the original Samoyed sheet.
+- Signed-in companion chat on Pets: one Groq model, six personalities, separate account/character histories and memory, earlier-message pagination, and individual clear-chat controls.
 - Focus timer with pause/resume and deadline persistence across navigation/reload.
 - Light, dark, and system themes; reduced motion; optional victory sounds; data export.
 - Desktop sidebar, fixed mobile navigation, reachable add/care actions, keyboard-accessible sheets, and offline PWA assets.
@@ -34,7 +36,7 @@ Old scarf and crown purchases become Peach beach and Cloud nine backgrounds at n
 
 ## Neon setup
 
-This checkout is configured for the dedicated **Pocket-Quest** project in AWS Singapore. The applied schema is [neon/001_game.sql](neon/001_game.sql). `.neon` records the project context; credentials are in ignored `.env.local`.
+This checkout is configured for the dedicated **Pocket-Quest** project in AWS Singapore. The schema is [neon/001_game.sql](neon/001_game.sql) plus [neon/002_chat.sql](neon/002_chat.sql). `.neon` records the project context; credentials are in ignored `.env.local`.
 
 For another environment, copy `.env.example` to `.env.local` and fill in:
 
@@ -55,6 +57,26 @@ npm run db:migrate
 Migrations require a direct connection. Browser actions go through `/api/game`; the server verifies identity and applies the shared game rules in a locked transaction using an owner-restricted database role. The app does not use a browser-facing Data API.
 
 The user chose a fresh Neon start. No existing Supabase accounts or progress were imported, and the old Supabase cloud project was not deleted.
+
+## Companion chat
+
+Open **Pets → Chat**. Choose any of the six friends in the compact chat header; this does not switch your active pet. Each signed-in user has an independent conversation and rolling memory summary with each character. The options menu holds chat details and clear-chat controls. Guests see a sign-in invitation. Chat requires an internet connection; saved chats are fetched from Neon and are not cached in browser storage.
+
+Create a key in the [Groq Console](https://console.groq.com/keys) using a Free plan account and add it to ignored `.env.local` (and your deployment's server environment):
+
+```dotenv
+GROQ_API_KEY=your-key-here
+GROQ_CHAT_MODEL=openai/gpt-oss-20b
+CHAT_DAILY_LIMIT=20
+```
+
+Restart the development server after changing environment variables. Run `npm run db:migrate` to apply all numbered migrations in order. The optional model setting supports `openai/gpt-oss-20b` and `openai/gpt-oss-120b`, which support the required strict structured output. Personalities and welcome messages live in [shared/chat.js](shared/chat.js).
+
+The default allowance is 20 send attempts per account per day, shared across all characters, resetting at midnight UTC (8 AM in Manila). `CHAT_DAILY_LIMIT` accepts 1–100. Provider failures consume an attempt to limit abuse; completed-message retries reuse the same ID without generating or counting again. There is a six-second cooldown and one active generation per account. A 90-second lease recovers abandoned requests. Failed messages remain in the composer for manual retry; they are not queued offline. Clearing a chat deletes that character's history and memory, invalidates an in-flight reply, and preserves the allowance and other characters' chats.
+
+Only this character's latest six turns, its bounded memory summary, the new message, companion name/mood, and quest counts go to Groq. Quest titles and other characters' histories are excluded. One model call produces both the reply and updated summary. Full successful conversations remain in Neon, with owner-restricted access and pagination. Responses are rendered as plain text, with no AI tools that can mutate game progress. The API key stays on the server; never use a `VITE_` key variable. The panel explains AI data use and handles missing credentials, quota exhaustion, timeouts, and provider failures.
+
+Groq's shared [free-plan limits](https://console.groq.com/docs/rate-limits) still apply independently of the app allowance; the allowance does not guarantee provider capacity or free billing if the provider account is upgraded. See [Groq's data policy](https://console.groq.com/docs/your-data) for retention controls. With no key configured, saved histories remain readable and the composer explains that chat is not connected. Automated tests use simulated provider responses; a real reply needs a configured key.
 
 ## Checks
 
@@ -78,7 +100,7 @@ npm run sprites:pack
 
 ## Deploy to Vercel
 
-Import this directory as a Vite project. Build with `npm run build` and serve `dist`. Vercel discovers `api/auth.js` and `api/game.js`; `vercel.json` preserves API requests and handles SPA routes.
+Import this directory as a Vite project. Build with `npm run build` and serve `dist`. Vercel discovers `api/auth.js`, `api/game.js`, and `api/chat.js`; `vercel.json` preserves API requests and handles SPA routes, and allows 60 seconds for the chat function.
 
 Set the five environment variables listed above, add the exact deployment origin to Neon Auth's trusted domains, and redeploy. Run account and purchase flows on the deployment. Cloud functions require server hosting; a static-only host supports guest mode when the public auth variable is omitted.
 

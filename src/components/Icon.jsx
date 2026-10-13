@@ -36,6 +36,7 @@ import {
   Trash2,
   Trophy,
   Volume2,
+  VolumeX,
   X,
   Zap,
   RotateCcw,
@@ -51,6 +52,7 @@ import {
   Image,
   Gift,
   SlidersHorizontal,
+  MessageCircle,
 } from 'lucide-react';
 const icons = {
   download: ArrowDownToLine,
@@ -90,6 +92,7 @@ const icons = {
   trash: Trash2,
   trophy: Trophy,
   volume: Volume2,
+  'volume-off': VolumeX,
   x: X,
   zap: Zap,
   reset: RotateCcw,
@@ -105,6 +108,7 @@ const icons = {
   scene: Image,
   gift: Gift,
   filter: SlidersHorizontal,
+  chat: MessageCircle,
 };
 export default function Icon({ name, size = 20, ...props }) {
   const Component = icons[name] || Sparkles;

@@ -68,7 +68,7 @@ async function fetchToken() {
   }
   return tokenData.token;
 }
-export async function cloudRequest(action, renewed = false, expectedOwner) {
+export async function accountRequest(path, options = {}, expectedOwner, renewed = false) {
   const token = await getToken();
   if (expectedOwner) {
     let subject;
@@ -82,21 +82,31 @@ export async function cloudRequest(action, renewed = false, expectedOwner) {
       throw error;
     }
   }
-  const response = await fetch('/api/game', {
-    method: action ? 'POST' : 'GET',
+  const response = await fetch(path, {
+    method: options.method || 'GET',
     headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
-    body: action ? JSON.stringify(action) : undefined,
-    signal: AbortSignal.timeout(20000),
+    body: options.body ? JSON.stringify(options.body) : undefined,
+    cache: 'no-store',
+    signal: options.signal || AbortSignal.timeout(options.timeout || 20000),
   });
   const result = await response.json();
   if (response.status === 401 && !renewed) {
     clearTokenCache();
-    return cloudRequest(action, true, expectedOwner);
+    return accountRequest(path, options, expectedOwner, true);
   }
   if (!response.ok) {
     const error = new Error(result.error || 'Could not sync your adventure.');
     error.status = response.status;
+    error.quota = result.quota;
     throw error;
   }
   return result;
+}
+export function cloudRequest(action, renewed = false, expectedOwner) {
+  return accountRequest(
+    '/api/game',
+    { method: action ? 'POST' : 'GET', body: action },
+    expectedOwner,
+    renewed,
+  );
 }

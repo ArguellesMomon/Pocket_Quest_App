@@ -292,7 +292,7 @@ export function useGameState() {
     }
   }, [storeSnapshot, publish, toast]);
   const act = useCallback(
-    async (input) => {
+    async (input, { quiet = false, sound = true } = {}) => {
       if (!input || !stateRef.current) return false;
       const action = { ...input, id: crypto.randomUUID() };
       try {
@@ -324,9 +324,9 @@ export function useGameState() {
             setBusy(false);
           }
         }
-        if (!['settings.update', 'pet.switch', 'background.reset'].includes(action.type))
+        if (!quiet && !['settings.update', 'pet.switch', 'background.reset'].includes(action.type))
           toast(message);
-        if (action.type === 'task.complete' && next.settings.sound) victorySound();
+        if (sound && action.type === 'task.complete' && next.settings.sound) victorySound();
         return true;
       } catch (e) {
         toast(e.message, 'error');

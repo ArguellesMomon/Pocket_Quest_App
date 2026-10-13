@@ -1,8 +1,6 @@
-import { createRemoteJWKSet, jwtVerify } from 'jose';
-import { database, withOwner } from '../server/database.js';
+import { withOwner } from '../server/database.js';
 import { loadGame, mutateGame } from '../server/game-store.js';
-import { authServiceUnavailable } from '../server/auth-errors.js';
-let keys, keyUrl;
+import { requireIdentity } from '../server/identity.js';
 export default async function handler(req, res) {
   res.setHeader('Cache-Control', 'no-store');
   res.setHeader('X-Content-Type-Options', 'nosniff');
@@ -12,40 +10,11 @@ export default async function handler(req, res) {
     return res
       .status(503)
       .json({ error: 'Account sync is not configured. Guest adventures are available.' });
-  const token = req.headers.authorization?.match(/^Bearer (.+)$/)?.[1];
-  if (!token) return res.status(401).json({ error: 'Please sign in to continue.' });
   let owner, ownerName;
   try {
-    const url = process.env.NEON_AUTH_JWKS_URL;
-    if (!url) throw new Error('Missing JWKS.');
-    if (url !== keyUrl) {
-      keys = createRemoteJWKSet(new URL(url));
-      keyUrl = url;
-    }
-    const origin = new URL(process.env.NEON_AUTH_BASE_URL).origin;
-    const { payload } = await jwtVerify(token, keys, {
-      issuer: origin,
-      audience: origin,
-      algorithms: ['EdDSA'],
-      requiredClaims: ['sub', 'exp', 'iat'],
-    });
-    if (payload.role !== 'authenticated' || payload.banned || !payload.sub)
-      throw new Error('Invalid identity.');
-    const { rows } = await database().query(
-      'select id,name,banned,"banExpires" from neon_auth."user" where id=$1',
-      [payload.sub],
-    );
-    if (
-      !rows.length ||
-      (rows[0].banned && (!rows[0].banExpires || new Date(rows[0].banExpires) > new Date()))
-    )
-      throw new Error('Inactive account.');
-    owner = payload.sub;
-    ownerName = rows[0].name;
+    ({ owner, name: ownerName } = await requireIdentity(req));
   } catch (error) {
-    if (authServiceUnavailable(error))
-      return res.status(503).json({ error: 'Sync is temporarily unavailable. Please try again.' });
-    return res.status(401).json({ error: 'Your session has ended. Please sign in again.' });
+    return res.status(error.status || 503).json({ error: error.message });
   }
   try {
     if (req.method === 'GET')

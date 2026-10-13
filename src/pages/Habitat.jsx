@@ -10,14 +10,23 @@ import {
 } from '../components/PhoneUI';
 import Icon from '../components/Icon';
 import Dialog from '../components/Dialog';
+import CompanionChat from '../components/CompanionChat';
 export default function Habitat() {
   const { state, act, busy } = useGame();
   const [tab, setTab] = useState('bag'),
     [rename, setRename] = useState(false),
+    [chat, setChat] = useState(false),
     [name, setName] = useState(state.pet.name);
   return (
     <div className="compact-page pets-page">
       <ScreenHeading title="Pets">
+        <button
+          className="button secondary companion-chat-open"
+          aria-label="Talk to your companion"
+          onClick={() => setChat(true)}
+        >
+          <Icon name="chat" size={17} /> Chat
+        </button>
         <button
           className="icon-button"
           aria-label="Rename companion"
@@ -51,6 +60,7 @@ export default function Habitat() {
           />
         )}
       </div>
+      {chat && <CompanionChat onClose={() => setChat(false)} />}
       {rename && (
         <Dialog title="Name your companion" onClose={() => setRename(false)}>
           <form
