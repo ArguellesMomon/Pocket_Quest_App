@@ -10,6 +10,7 @@ import {
 } from 'react-router-dom';
 import { GameContext, useGame } from './context';
 import { useGameState } from './hooks/useGameState';
+import { useKeyboardViewport } from './hooks/useKeyboardViewport';
 import { completed, levelFor, streakFor } from '../shared/game';
 import Icon from './components/Icon';
 import { QuestEditor, HelpDialog } from './components/GameUI';
@@ -178,6 +179,7 @@ function LinkToSettings() {
   );
 }
 function Adventure() {
+  useKeyboardViewport();
   const game = useGameState();
   const [editor, setEditor] = useState(null),
     [help, setHelp] = useState(false);
