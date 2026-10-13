@@ -183,7 +183,11 @@
         "height": 238
       }
     ],
-    "transparent": true
+    "transparent": true,
+    "encoding": {
+      "quality": 88,
+      "alphaQuality": 100
+    }
   },
   "nori": {
     "source": "assets/companions/source/nori.png",
@@ -369,7 +373,11 @@
         "height": 245
       }
     ],
-    "transparent": true
+    "transparent": true,
+    "encoding": {
+      "quality": 88,
+      "alphaQuality": 100
+    }
   },
   "pip": {
     "source": "assets/companions/source/pip.png",
@@ -555,7 +563,11 @@
         "height": 232
       }
     ],
-    "transparent": true
+    "transparent": true,
+    "encoding": {
+      "quality": 88,
+      "alphaQuality": 100
+    }
   },
   "maple": {
     "source": "assets/companions/source/maple.png",
@@ -741,7 +753,11 @@
         "height": 234
       }
     ],
-    "transparent": true
+    "transparent": true,
+    "encoding": {
+      "quality": 88,
+      "alphaQuality": 100
+    }
   },
   "chami": {
     "source": "assets/companions/source/chami.png",
@@ -927,7 +943,11 @@
         "height": 267
       }
     ],
-    "transparent": true
+    "transparent": true,
+    "encoding": {
+      "quality": 88,
+      "alphaQuality": 100
+    }
   },
   "chami-idle": {
     "source": "assets/reference/chami/spritesheet.png",
@@ -1001,6 +1021,26 @@
         "height": 255
       }
     ],
-    "transparent": true
+    "transparent": true,
+    "encoding": {
+      "quality": 88,
+      "alphaQuality": 100
+    }
+  },
+  "finn": {
+    "source": "assets/reference/samo/spritesheet.webp",
+    "grid": [
+      8,
+      9
+    ],
+    "cell": [
+      192,
+      208
+    ],
+    "transparent": true,
+    "encoding": {
+      "quality": 88,
+      "alphaQuality": 100
+    }
   }
 }

@@ -5,7 +5,8 @@ import { ScreenHeading, Segments } from '../components/PhoneUI';
 import Icon from '../components/Icon';
 import Dialog from '../components/Dialog';
 export default function Preferences() {
-  const { state, user, act, busy, pendingAction, signOut, toast, openHelp, retry } = useGame();
+  const { state, user, act, busy, pendingAction, signOut, toast, openHelp, retry, syncing } =
+    useGame();
   const [tab, setTab] = useState('look'),
     [logout, setLogout] = useState(false),
     [signingOut, setSigningOut] = useState(false);
@@ -64,7 +65,7 @@ export default function Preferences() {
                 <button
                   className={state.settings.theme === t ? 'selected' : ''}
                   key={t}
-                  disabled={busy || pendingAction}
+                  disabled={busy}
                   aria-pressed={state.settings.theme === t}
                   onClick={() => preference('theme', t)}
                 >
@@ -87,7 +88,7 @@ export default function Preferences() {
                   aria-label={s.name}
                   aria-checked={state.settings[s.key]}
                   className={`toggle ${state.settings[s.key] ? 'on' : ''}`}
-                  disabled={busy || pendingAction}
+                  disabled={busy}
                   onClick={() => preference(s.key, !state.settings[s.key])}
                 >
                   <span />
@@ -102,7 +103,7 @@ export default function Preferences() {
               <select
                 aria-label="Daily quest goal"
                 value={state.settings.dailyGoal}
-                disabled={busy || pendingAction}
+                disabled={busy}
                 onChange={(e) => preference('dailyGoal', Number(e.target.value))}
               >
                 {[1, 3, 5, 7].map((n) => (
@@ -160,7 +161,7 @@ export default function Preferences() {
                 ))}
               </select>
             </label>
-            <button className="button primary full-width" disabled={busy || pendingAction}>
+            <button className="button primary full-width" disabled={busy}>
               Save changes
               <Icon name="check" size={17} />
             </button>
@@ -177,7 +178,7 @@ export default function Preferences() {
                 {pendingAction && (
                   <button
                     className="icon-button"
-                    disabled={busy}
+                    disabled={syncing}
                     onClick={retry}
                     aria-label="Retry sync"
                   >

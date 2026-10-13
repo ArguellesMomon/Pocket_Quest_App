@@ -26,7 +26,7 @@ Open **http://127.0.0.1:5175**. Guest mode works without database credentials an
 - New offline app versions activate automatically; refresh to load the latest UI without clearing saved progress.
 - Clear Buy/Use/Apply controls, animated scene previews, a pet-side Scene shortcut, and labeled New quest buttons. Quick care uses inventory first and buys/uses a snack or toy atomically when the bag is empty.
 - Email/password accounts, signup, sign-in/out, email-code UI, and password recovery/reset UI through Neon Auth.
-- Server-validated cloud actions, atomic rewards/purchases, owner isolation, and automatic idempotent retries. Pending requests recover quietly in the background; Account settings show a compact save status.
+- Immediate theme, companion, care, and quest updates with an ordered background save queue, server validation, rollback, and automatic idempotent retries. Queued commands and cached account progress survive reload; Account settings show a compact save status.
 
 Guest and cloud adventures are separate. Guest progress stays on this device; account progress is saved in Neon.
 

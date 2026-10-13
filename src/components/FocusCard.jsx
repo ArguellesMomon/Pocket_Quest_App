@@ -3,7 +3,7 @@ import { useGame } from '../context';
 import { completed } from '../../shared/game';
 import Icon from './Icon';
 export default function FocusCard() {
-  const { state, user, now, act, toast, busy, pendingAction } = useGame();
+  const { state, user, now, act, toast, busy } = useGame();
   const key = `pocketquest-focus:${user?.id || 'guest'}`;
   const [focus, setFocus] = useState(() => {
     try {
@@ -99,7 +99,7 @@ export default function FocusCard() {
         {done ? (
           <button
             className="button primary"
-            disabled={busy || pendingAction || !selected || completed(state, selected, now)}
+            disabled={busy || !selected || completed(state, selected, now)}
             onClick={async () => {
               if (await act({ type: 'task.complete', taskId: selected.id })) reset();
             }}

@@ -7,7 +7,7 @@ export function database() {
     pool = new pg.Pool({
       connectionString: process.env.DATABASE_URL,
       max: 5,
-      idleTimeoutMillis: 5000,
+      idleTimeoutMillis: 30000,
       connectionTimeoutMillis: 15000,
     });
     if (process.env.VERCEL) attachDatabasePool(pool);

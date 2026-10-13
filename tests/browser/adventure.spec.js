@@ -356,6 +356,7 @@ test('Neon cloud progress and safe retry remain compatible with the new UI', asy
   await page.getByRole('button', { name: 'Continue adventure', exact: true }).click();
   await expect(page.getByRole('heading', { name: 'Today', exact: true })).toBeVisible();
   let interrupted = false,
+    committed = false,
     holdRetry = true;
   const operations = [];
   await page.route('**/api/game', async (route) => {
@@ -364,16 +365,22 @@ test('Neon cloud progress and safe retry remain compatible with the new UI', asy
       if (!interrupted) {
         interrupted = true;
         await route.fetch();
+        committed = true;
         await route.abort('failed');
       } else if (holdRetry) await route.abort('failed');
       else await route.continue();
     } else await route.continue();
   });
   await page.getByRole('button', { name: 'Feed companion a berry bite', exact: true }).click();
+  await expect.poll(() => committed).toBe(true);
   await expect
     .poll(() =>
       page.evaluate(() =>
-        Object.keys(sessionStorage).some((key) => key.startsWith('pocketquest-pending:')),
+        Object.keys(localStorage).some(
+          (key) =>
+            key.startsWith('pocketquest-cloud-v2:') &&
+            JSON.parse(localStorage.getItem(key)).queue.length,
+        ),
       ),
     )
     .toBe(true);
@@ -391,7 +398,11 @@ test('Neon cloud progress and safe retry remain compatible with the new UI', asy
     .poll(
       () =>
         page.evaluate(() =>
-          Object.keys(sessionStorage).some((key) => key.startsWith('pocketquest-pending:')),
+          Object.keys(localStorage).some(
+            (key) =>
+              key.startsWith('pocketquest-cloud-v2:') &&
+              JSON.parse(localStorage.getItem(key)).queue.length,
+          ),
         ),
       { timeout: 15000 },
     )

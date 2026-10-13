@@ -1,65 +1,131 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { applyAction, createGame, dayKey, upgradeGame } from '../../shared/game.js';
-import { auth, cloudConfigured, cloudRequest } from '../lib/cloud.js';
+import { createSnapshot, enqueue, projectedState, reconcile } from '../../shared/outbox.js';
+import { auth, clearTokenCache, cloudConfigured, cloudRequest } from '../lib/cloud.js';
 import { retryableSyncError, retryDelay } from '../lib/sync-policy.js';
-const KEY = 'pocketquest-guest-v1';
-function readGuest() {
+const KEY = 'pocketquest-guest-v1',
+  ACCOUNT = 'pocketquest-account-v2';
+const cloudKey = (owner) => `pocketquest-cloud-v2:${owner}`;
+function readJSON(storage, key) {
   try {
-    const value = JSON.parse(localStorage.getItem(KEY));
-    return value?.schema === 1 &&
-      Array.isArray(value.tasks) &&
-      Array.isArray(value.completions) &&
-      Array.isArray(value.activity) &&
-      Array.isArray(value.bonusDays) &&
-      value.equipped &&
-      Array.isArray(value.equipped.decor) &&
-      value.inventory &&
-      Number.isFinite(value.coins) &&
-      Number.isFinite(value.xp) &&
-      typeof value.name === 'string' &&
-      typeof value.timezone === 'string' &&
-      value.pet &&
-      value.settings
-      ? upgradeGame(value)
-      : null;
+    return JSON.parse(storage.getItem(key));
   } catch {
     return null;
   }
 }
+function readGuest() {
+  const value = readJSON(localStorage, KEY);
+  return value?.schema === 1 &&
+    Array.isArray(value.tasks) &&
+    Array.isArray(value.completions) &&
+    Array.isArray(value.activity) &&
+    Array.isArray(value.bonusDays) &&
+    Array.isArray(value.equipped?.decor) &&
+    value.inventory &&
+    Number.isFinite(value.coins) &&
+    Number.isFinite(value.xp) &&
+    value.pet &&
+    value.settings
+    ? upgradeGame(value)
+    : null;
+}
+function readCloud(owner) {
+  const value = readJSON(localStorage, cloudKey(owner));
+  return value?.schema === 1 &&
+    value.base?.pet &&
+    value.base?.settings &&
+    Number.isFinite(value.version) &&
+    Array.isArray(value.queue)
+    ? value
+    : null;
+}
+function withLock(key, run) {
+  return navigator.locks ? navigator.locks.request(key, run) : Promise.resolve().then(run);
+}
+function boot() {
+  const user = readJSON(sessionStorage, ACCOUNT);
+  const snapshot = user?.id ? readCloud(user.id) : null;
+  return snapshot
+    ? { user, state: projectedState(snapshot), snapshot }
+    : { user: null, state: readGuest(), snapshot: null };
+}
+function victorySound() {
+  try {
+    const audio = new (window.AudioContext || window.webkitAudioContext)();
+    const oscillator = audio.createOscillator(),
+      gain = audio.createGain();
+    oscillator.connect(gain);
+    gain.connect(audio.destination);
+    gain.gain.setValueAtTime(0.08, audio.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.001, audio.currentTime + 0.25);
+    oscillator.frequency.setValueAtTime(660, audio.currentTime);
+    oscillator.frequency.setValueAtTime(880, audio.currentTime + 0.1);
+    oscillator.start();
+    oscillator.stop(audio.currentTime + 0.25);
+    oscillator.onended = () => audio.close();
+  } catch {}
+}
 export function useGameState() {
-  const [state, setState] = useState(readGuest);
-  const [user, setUser] = useState(null);
-  const [ready, setReady] = useState(!cloudConfigured);
-  const [busy, setBusy] = useState(false);
-  const [error, setError] = useState('');
-  const [notice, setNotice] = useState(null);
-  const [now, setNow] = useState(Date.now());
+  const initial = useRef(null);
+  if (!initial.current) initial.current = boot();
+  const [state, setState] = useState(initial.current.state),
+    [user, setUser] = useState(initial.current.user);
+  const [ready, setReady] = useState(Boolean(initial.current.snapshot) || !cloudConfigured);
+  const [busy, setBusy] = useState(false),
+    [syncing, setSyncing] = useState(false);
+  const [pendingAction, setPendingAction] = useState(
+    Boolean(initial.current.snapshot?.queue.length || initial.current.snapshot?.refresh),
+  );
+  const [revision, setRevision] = useState(0),
+    [error, setError] = useState(''),
+    [notice, setNotice] = useState(null),
+    [now, setNow] = useState(Date.now());
   const stateRef = useRef(state),
     userRef = useRef(user),
-    lock = useRef(false),
-    version = useRef(0),
-    mode = useRef('guest');
-  const pending = useRef(null);
-  const retryAttempts = useRef(0);
-  const [pendingAction, setPendingAction] = useState(false);
-  const timer = useRef(null);
+    snapshotRef = useRef(initial.current.snapshot);
+  const mode = useRef(user ? 'cloud' : 'guest'),
+    flight = useRef(false),
+    guestLock = useRef(false),
+    timer = useRef(null),
+    restoreRef = useRef(null);
+  const restoreEpoch = useRef(0);
+  const verifiedOwner = useRef(null);
   const toast = useCallback((message, kind = 'success') => {
     clearTimeout(timer.current);
     setNotice({ message, kind, id: Date.now() });
     timer.current = setTimeout(() => setNotice(null), 5000);
   }, []);
   const accept = useCallback((value) => {
-    const upgraded = upgradeGame(value);
-    stateRef.current = upgraded;
-    setState(upgraded);
+    const next = upgradeGame(value);
+    stateRef.current = next;
+    setState(next);
   }, []);
+  const publish = useCallback(
+    (owner, snapshot) => {
+      if (userRef.current?.id !== owner) return;
+      snapshotRef.current = snapshot;
+      accept(projectedState(snapshot));
+      setPendingAction(Boolean(snapshot.queue.length || snapshot.refresh));
+      setRevision((value) => value + 1);
+    },
+    [accept],
+  );
+  const storeSnapshot = useCallback(
+    (owner, snapshot) => {
+      localStorage.setItem(cloudKey(owner), JSON.stringify(snapshot));
+      publish(owner, snapshot);
+    },
+    [publish],
+  );
   const restore = useCallback(async () => {
+    const epoch = ++restoreEpoch.current;
+    verifiedOwner.current = null;
     setError('');
     if (!auth || !navigator.onLine) {
       setReady(true);
       return;
     }
-    setReady(false);
+    if (!stateRef.current) setReady(false);
     try {
       const response = await fetch('/api/auth/get-session', {
         credentials: 'same-origin',
@@ -67,35 +133,75 @@ export function useGameState() {
         signal: AbortSignal.timeout(10000),
       });
       if (!response.ok) throw new Error('Could not restore your account. Please try again.');
-      const session = await response.json();
-      const identity = session?.user || null;
+      const session = await response.json(),
+        identity = session?.user || null;
+      if (epoch !== restoreEpoch.current) return;
+      if (userRef.current?.id !== identity?.id) clearTokenCache();
       userRef.current = identity;
+      verifiedOwner.current = identity?.id || null;
       setUser(identity);
-      if (identity) {
-        mode.current = 'cloud';
-        accept(null);
-        const result = await cloudRequest();
-        version.current = result.version;
-        accept(result.state);
-        try {
-          pending.current =
-            JSON.parse(sessionStorage.getItem(`pocketquest-pending:${identity.id}`)) || null;
-        } catch {
-          pending.current = null;
-        }
-        setPendingAction(Boolean(pending.current));
-      } else {
+      if (!identity) {
         mode.current = 'guest';
-        pending.current = null;
+        snapshotRef.current = null;
+        sessionStorage.removeItem(ACCOUNT);
         setPendingAction(false);
         accept(readGuest());
+        return;
+      }
+      const owner = identity.id;
+      mode.current = 'cloud';
+      sessionStorage.setItem(
+        ACCOUNT,
+        JSON.stringify({ id: owner, name: identity.name, email: identity.email }),
+      );
+      const cached = readCloud(owner);
+      if (cached) {
+        publish(owner, cached);
+        setReady(true);
+      } else {
+        accept(null);
+        setReady(false);
+      }
+      // Migrate old interrupted requests by confirming their existing ID before
+      // adopting a fresh server snapshot. Never replay them against an uncertain GET.
+      const legacy = readJSON(sessionStorage, `pocketquest-pending:${owner}`);
+      if (legacy) {
+        const result = await cloudRequest(legacy, false, owner);
+        await withLock(cloudKey(owner), () => {
+          const current = readCloud(owner);
+          if (!current) storeSnapshot(owner, createSnapshot(result));
+          else if (!current.queue.length) storeSnapshot(owner, reconcile(current, result).snapshot);
+        });
+        sessionStorage.removeItem(`pocketquest-pending:${owner}`);
+      } else if (!cached?.queue.length && !cached?.refresh) {
+        const result = await cloudRequest(undefined, false, owner);
+        await withLock(cloudKey(owner), () => {
+          const current = readCloud(owner);
+          // A command may have started during GET. Its persisted pre-action base
+          // must remain intact until its POST acknowledgment arrives.
+          if (!current) storeSnapshot(owner, createSnapshot(result));
+          else if (!current.queue.length && !current.refresh)
+            storeSnapshot(owner, reconcile(current, result).snapshot);
+        });
       }
     } catch (e) {
-      setError(e.message || 'Could not restore your session.');
+      if (epoch === restoreEpoch.current) {
+        setError(e.message || 'Could not restore your session.');
+        const owner = userRef.current?.id;
+        if (owner)
+          await withLock(cloudKey(owner), () => {
+            const snapshot = readCloud(owner);
+            if (snapshot && (snapshot.queue.length || snapshot.refresh)) {
+              snapshot.attempts = (snapshot.attempts || 0) + 1;
+              storeSnapshot(owner, snapshot);
+            }
+          });
+      }
     } finally {
-      setReady(true);
+      if (epoch === restoreEpoch.current) setReady(true);
     }
-  }, [accept]);
+  }, [accept, publish, storeSnapshot]);
+  restoreRef.current = restore;
   useEffect(() => {
     restore();
     return () => clearTimeout(timer.current);
@@ -106,11 +212,15 @@ export function useGameState() {
   }, []);
   useEffect(() => {
     const listener = (event) => {
-      if (event.key === KEY && mode.current === 'guest') accept(readGuest());
+      if (mode.current === 'guest' && event.key === KEY) accept(readGuest());
+      else if (userRef.current && event.key === cloudKey(userRef.current.id)) {
+        const snapshot = readCloud(userRef.current.id);
+        if (snapshot) publish(userRef.current.id, snapshot);
+      }
     };
     window.addEventListener('storage', listener);
     return () => window.removeEventListener('storage', listener);
-  }, [accept]);
+  }, [accept, publish]);
   const startGuest = useCallback(
     (species) => {
       if (userRef.current) return;
@@ -122,91 +232,121 @@ export function useGameState() {
     },
     [accept],
   );
-  const act = useCallback(
-    async (input, retry = false) => {
-      if (lock.current || !stateRef.current || (retry && !pending.current)) return false;
-      if (pending.current && !retry) {
-        return false;
-      }
-      lock.current = true;
-      setBusy(true);
-      const action = retry ? pending.current : { ...input, id: crypto.randomUUID() };
-      try {
-        let result;
-        if (userRef.current) {
-          pending.current = action;
-          setPendingAction(true);
-          sessionStorage.setItem(
-            `pocketquest-pending:${userRef.current.id}`,
-            JSON.stringify(action),
-          );
-          result = await cloudRequest(action);
-          if (result.version < version.current)
-            throw new Error('Please reload to sync the latest adventure.');
-          version.current = result.version;
-        } else {
-          // Web Locks keep two open guest tabs from spending the same balance.
-          const apply = () => {
-            const r = applyAction(readGuest() || stateRef.current, action);
-            localStorage.setItem(KEY, JSON.stringify(r.state));
-            return r;
-          };
-          result = navigator.locks ? await navigator.locks.request(KEY, apply) : apply();
-        }
-        pending.current = null;
-        retryAttempts.current = 0;
-        setPendingAction(false);
-        accept(result.state);
-        setError('');
-        toast(result.message);
-        if (userRef.current) sessionStorage.removeItem(`pocketquest-pending:${userRef.current.id}`);
-        if (action.type === 'task.complete' && result.state.settings.sound) {
+  const drain = useCallback(async () => {
+    const owner = userRef.current?.id;
+    if (!owner || verifiedOwner.current !== owner || flight.current || !navigator.onLine)
+      return false;
+    flight.current = true;
+    setSyncing(true);
+    try {
+      // The network lock is distinct from the short storage lock: more local
+      // interactions can be queued while one tab submits the account's commands.
+      await withLock(`${cloudKey(owner)}:network`, async () => {
+        while (userRef.current?.id === owner && navigator.onLine) {
+          let command, needsRefresh;
+          await withLock(cloudKey(owner), () => {
+            const snapshot = readCloud(owner);
+            if (!snapshot) return;
+            needsRefresh = snapshot.refresh;
+            command = snapshot.queue[0]?.action;
+            if (command && !needsRefresh) {
+              snapshot.queue[0].sent = true;
+              storeSnapshot(owner, snapshot);
+            }
+          });
+          if (!command && !needsRefresh) break;
           try {
-            const Audio = window.AudioContext || window.webkitAudioContext;
-            const audio = new Audio();
-            const oscillator = audio.createOscillator(),
-              gain = audio.createGain();
-            oscillator.connect(gain);
-            gain.connect(audio.destination);
-            gain.gain.setValueAtTime(0.08, audio.currentTime);
-            gain.gain.exponentialRampToValueAtTime(0.001, audio.currentTime + 0.25);
-            oscillator.frequency.setValueAtTime(660, audio.currentTime);
-            oscillator.frequency.setValueAtTime(880, audio.currentTime + 0.1);
-            oscillator.start();
-            oscillator.stop(audio.currentTime + 0.25);
-            oscillator.onended = () => audio.close();
-          } catch {}
+            const result = await cloudRequest(needsRefresh ? undefined : command, false, owner);
+            await withLock(cloudKey(owner), () => {
+              const snapshot = readCloud(owner);
+              if (!snapshot) return;
+              const rebased = reconcile(snapshot, result, needsRefresh ? undefined : command.id);
+              storeSnapshot(owner, rebased.snapshot);
+              for (const message of rebased.rejected) toast(message, 'error');
+            });
+            setError('');
+          } catch (e) {
+            const retryable = retryableSyncError(e);
+            await withLock(cloudKey(owner), () => {
+              const snapshot = readCloud(owner);
+              if (!snapshot) return;
+              if (!retryable && snapshot.queue[0]?.action.id === command?.id) {
+                snapshot.queue.shift();
+                snapshot.refresh = true;
+              }
+              snapshot.attempts = (snapshot.attempts || 0) + 1;
+              storeSnapshot(owner, snapshot);
+            });
+            if (!retryable) toast(e.message, 'error');
+            if (e.status === 401) await restoreRef.current();
+            break;
+          }
         }
+      });
+      const latest = readCloud(owner);
+      if (latest) publish(owner, latest);
+      return true;
+    } finally {
+      flight.current = false;
+      setSyncing(false);
+    }
+  }, [storeSnapshot, publish, toast]);
+  const act = useCallback(
+    async (input) => {
+      if (!input || !stateRef.current) return false;
+      const action = { ...input, id: crypto.randomUUID() };
+      try {
+        let message, next;
+        if (userRef.current) {
+          const owner = userRef.current.id;
+          await withLock(cloudKey(owner), () => {
+            const snapshot = readCloud(owner);
+            if (!snapshot) throw new Error('Reconnect to load your adventure first.');
+            const queued = enqueue(snapshot, action);
+            storeSnapshot(owner, queued.snapshot);
+            next = stateRef.current;
+            message = queued.message;
+          });
+        } else {
+          if (guestLock.current) return false;
+          guestLock.current = true;
+          setBusy(true);
+          try {
+            await withLock(KEY, () => {
+              const result = applyAction(readGuest() || stateRef.current, action);
+              localStorage.setItem(KEY, JSON.stringify(result.state));
+              accept(result.state);
+              next = result.state;
+              message = result.message;
+            });
+          } finally {
+            guestLock.current = false;
+            setBusy(false);
+          }
+        }
+        if (!['settings.update', 'pet.switch', 'background.reset'].includes(action.type))
+          toast(message);
+        if (action.type === 'task.complete' && next.settings.sound) victorySound();
         return true;
       } catch (e) {
-        // Validation errors are definite failures. Unknown transport outcomes retain the same operation ID for a safe retry.
-        const willRetry = Boolean(userRef.current) && retryableSyncError(e);
-        if (!willRetry) {
-          pending.current = null;
-          setPendingAction(false);
-          if (userRef.current)
-            sessionStorage.removeItem(`pocketquest-pending:${userRef.current.id}`);
-        }
-        if (willRetry) {
-          if (retry) retryAttempts.current++;
-        } else toast(e.message, 'error');
-        if (e.status === 401) await restore();
+        toast(e.message, 'error');
         return false;
-      } finally {
-        lock.current = false;
-        setBusy(false);
       }
     },
-    [accept, toast, restore],
+    [accept, storeSnapshot, toast],
   );
   useEffect(() => {
-    if (!pendingAction || busy || !user || !ready) return;
+    if (!pendingAction || syncing || !user || !ready) return;
     const resume = () => {
-      if (navigator.onLine && !document.hidden && pending.current && !lock.current) act(null, true);
+      if (navigator.onLine && !document.hidden) {
+        if (verifiedOwner.current === user.id) drain();
+        else restoreRef.current();
+      }
     };
+    const attempts = snapshotRef.current?.attempts || 0;
     const timeout =
-      navigator.onLine && !document.hidden
-        ? setTimeout(resume, retryDelay(retryAttempts.current))
+      navigator.onLine && !document.hidden && (verifiedOwner.current === user.id || error)
+        ? setTimeout(resume, attempts ? retryDelay(attempts - 1) : 0)
         : null;
     window.addEventListener('online', resume);
     window.addEventListener('focus', resume);
@@ -217,16 +357,24 @@ export function useGameState() {
       window.removeEventListener('focus', resume);
       document.removeEventListener('visibilitychange', resume);
     };
-  }, [pendingAction, busy, user, ready, act]);
+  }, [pendingAction, syncing, user, ready, revision, error, drain]);
   const signOut = useCallback(async () => {
-    if (auth && userRef.current) {
+    const owner = userRef.current?.id;
+    if (owner) {
+      const snapshot = readCloud(owner);
+      if (snapshot?.queue.length || snapshot?.refresh)
+        throw new Error('Let your latest changes finish saving before signing out.');
+      restoreEpoch.current++;
       const result = await auth.signOut();
       if (result.error) throw new Error(result.error.message);
     }
+    clearTokenCache();
+    verifiedOwner.current = null;
+    sessionStorage.removeItem(ACCOUNT);
     userRef.current = null;
     setUser(null);
     mode.current = 'guest';
-    pending.current = null;
+    snapshotRef.current = null;
     setPendingAction(false);
     accept(readGuest());
   }, [accept]);
@@ -235,6 +383,7 @@ export function useGameState() {
     user,
     ready,
     busy,
+    syncing,
     error,
     now,
     toast,
@@ -245,7 +394,7 @@ export function useGameState() {
     restore,
     signOut,
     pendingAction,
-    retry: () => act(null, true),
+    retry: () => (verifiedOwner.current === userRef.current?.id ? drain() : restore()),
     today: state ? dayKey(now, state.timezone) : '',
   };
 }

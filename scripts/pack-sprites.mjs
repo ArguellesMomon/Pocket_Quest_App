@@ -105,7 +105,7 @@ for (const name of ['mochi', 'nori', 'pip', 'maple', 'chami', 'chami-idle']) {
     create: { width: frame * 4, height: frame * rows, channels: 4, background: '#00000000' },
   })
     .composite(layers)
-    .webp({ lossless: true })
+    .webp({ quality: 88, alphaQuality: 100, effort: 6 })
     .toFile(`public/companions/${name}.webp`);
   report[name] = {
     source,
@@ -114,7 +114,18 @@ for (const name of ['mochi', 'nori', 'pip', 'maple', 'chami', 'chami-idle']) {
     cell: [frame, frame],
     frames: bounds,
     transparent: true,
+    encoding: { quality: 88, alphaQuality: 100 },
   };
   console.log(`${name}: ${rows * 4} aligned frames, transparent WebP atlas.`);
 }
+await sharp('assets/reference/samo/spritesheet.webp')
+  .webp({ quality: 88, alphaQuality: 100, effort: 6 })
+  .toFile('public/companions/samo.webp');
+report.finn = {
+  source: 'assets/reference/samo/spritesheet.webp',
+  grid: [8, 9],
+  cell: [192, 208],
+  transparent: true,
+  encoding: { quality: 88, alphaQuality: 100 },
+};
 await writeFile('assets/companions/atlas-manifest.json', JSON.stringify(report, null, 2));

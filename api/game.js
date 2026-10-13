@@ -1,6 +1,7 @@
 import { createRemoteJWKSet, jwtVerify } from 'jose';
 import { database, withOwner } from '../server/database.js';
 import { loadGame, mutateGame } from '../server/game-store.js';
+import { authServiceUnavailable } from '../server/auth-errors.js';
 let keys, keyUrl;
 export default async function handler(req, res) {
   res.setHeader('Cache-Control', 'no-store');
@@ -41,7 +42,9 @@ export default async function handler(req, res) {
       throw new Error('Inactive account.');
     owner = payload.sub;
     ownerName = rows[0].name;
-  } catch {
+  } catch (error) {
+    if (authServiceUnavailable(error))
+      return res.status(503).json({ error: 'Sync is temporarily unavailable. Please try again.' });
     return res.status(401).json({ error: 'Your session has ended. Please sign in again.' });
   }
   try {

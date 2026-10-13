@@ -52,7 +52,7 @@ export function EmptyState({ icon = 'sprout', title, description, children }) {
   );
 }
 export function QuestRow({ task }) {
-  const { state, now, act, busy, pendingAction, editQuest } = useGame();
+  const { state, now, act, busy, editQuest } = useGame();
   const done = completed(state, task, now),
     reward = DIFFICULTIES[task.difficulty];
   const [confirm, setConfirm] = useState(false);
@@ -64,7 +64,7 @@ export function QuestRow({ task }) {
         <button
           className="quest-check"
           aria-label={`Complete ${task.title}`}
-          disabled={done || busy || pendingAction}
+          disabled={done || busy}
           onClick={() => act({ type: 'task.complete', taskId: task.id })}
         >
           {done && <Icon name="check" size={16} />}
@@ -152,7 +152,7 @@ export function QuestRow({ task }) {
               </button>
               <button
                 className="button primary"
-                disabled={done || busy || pendingAction}
+                disabled={done || busy}
                 onClick={async () => {
                   if (await act({ type: 'task.complete', taskId: task.id })) setView(false);
                 }}
@@ -178,7 +178,7 @@ export function QuestRow({ task }) {
               </button>
               <button
                 className="button danger"
-                disabled={busy || pendingAction}
+                disabled={busy}
                 onClick={async () => {
                   if (await act({ type: 'task.delete', taskId: task.id })) setConfirm(false);
                 }}
@@ -193,7 +193,7 @@ export function QuestRow({ task }) {
   );
 }
 export function QuestEditor({ task, onClose }) {
-  const { act, busy, pendingAction } = useGame();
+  const { act, busy } = useGame();
   const [data, setData] = useState(
     task || {
       title: '',
@@ -311,7 +311,7 @@ export function QuestEditor({ task, onClose }) {
           <button className="button secondary" type="button" onClick={onClose}>
             Cancel
           </button>
-          <button className="button primary" disabled={busy || pendingAction || !data.title.trim()}>
+          <button className="button primary" disabled={busy || !data.title.trim()}>
             {busy ? 'Saving…' : task ? 'Save' : 'Add quest'}
             <Icon name="plus" size={17} />
           </button>

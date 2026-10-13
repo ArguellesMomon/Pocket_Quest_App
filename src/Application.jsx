@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useLayoutEffect, useState } from 'react';
 import {
   BrowserRouter,
   Navigate,
@@ -20,6 +20,7 @@ import Habitat from './pages/Habitat';
 import Market from './pages/Market';
 import Journey from './pages/Journey';
 import Preferences from './pages/Preferences';
+import { preloadCompanions } from './lib/sprite-preload';
 const destinations = [
   { path: '/dashboard', label: 'Today', icon: 'sun' },
   { path: '/quests', label: 'Quests', icon: 'flag' },
@@ -43,12 +44,18 @@ export function Brand({ compact = false }) {
   );
 }
 function ThemeButton() {
-  const { state, act, busy, pendingAction } = useGame();
+  const { state, act, busy } = useGame();
+  const theme =
+    state.settings.theme === 'system'
+      ? matchMedia('(prefers-color-scheme: dark)').matches
+        ? 'dark'
+        : 'light'
+      : state.settings.theme;
   return (
     <button
       className="icon-button theme-toggle"
       aria-label="Toggle light and dark mode"
-      disabled={busy || pendingAction}
+      disabled={busy}
       onClick={() =>
         act({
           type: 'settings.update',
@@ -59,7 +66,7 @@ function ThemeButton() {
         })
       }
     >
-      <Icon name={document.documentElement.dataset.theme === 'dark' ? 'sun' : 'moon'} size={19} />
+      <Icon name={theme === 'dark' ? 'sun' : 'moon'} size={19} />
     </button>
   );
 }
@@ -177,6 +184,10 @@ function Adventure() {
   const location = useLocation(),
     navigate = useNavigate();
   useEffect(() => {
+    const id = setTimeout(preloadCompanions, 300);
+    return () => clearTimeout(id);
+  }, []);
+  useLayoutEffect(() => {
     const media = matchMedia('(prefers-color-scheme: dark)');
     const apply = () => {
       const theme = game.state?.settings.theme || 'system';

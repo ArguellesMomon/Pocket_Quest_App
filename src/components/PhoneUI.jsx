@@ -9,6 +9,7 @@ import SpritePet from './SpritePet';
 import { ItemArt, HabitatArt } from './PixelArt';
 import { Progress } from './GameUI';
 import FocusCard from './FocusCard';
+import { preloadCompanion } from '../lib/sprite-preload';
 export const GROUPS = [
   { id: 'care', name: 'Care', icon: 'utensils', categories: ['Food', 'Toys'] },
   { id: 'room', name: 'Room', icon: 'home', categories: ['Decor', 'Habitats'] },
@@ -104,7 +105,7 @@ export function PetScene({ large = false }) {
   );
 }
 export function QuickCare({ focus = false }) {
-  const { state, user, now, act, busy, pendingAction } = useGame();
+  const { state, user, now, act, busy } = useGame();
   const [drawer, setDrawer] = useState(null);
   let remaining = null;
   try {
@@ -112,7 +113,7 @@ export function QuickCare({ focus = false }) {
     if (saved?.started)
       remaining = saved.end ? Math.max(0, Math.ceil((saved.end - now) / 1000)) : saved.remaining;
   } catch {}
-  const locked = busy || pendingAction;
+  const locked = busy;
   return (
     <>
       <div className="quick-care">
@@ -173,7 +174,7 @@ export function QuickCare({ focus = false }) {
   );
 }
 export function ItemBrowser({ mode = 'shop' }) {
-  const { state, act, busy, pendingAction } = useGame();
+  const { state, act, busy } = useGame();
   const [params, setParams] = useSearchParams();
   const [bagGroup, setBagGroup] = useState('care'),
     [page, setPage] = useState(0),
@@ -256,7 +257,6 @@ export function ItemBrowser({ mode = 'shop' }) {
   const unavailable = (item) =>
     level < item.level ||
     busy ||
-    pendingAction ||
     (item.free && equipped(item)) ||
     (action(item).type === 'item.buy' && state.coins < item.cost);
   return (
@@ -348,7 +348,7 @@ export function ItemBrowser({ mode = 'shop' }) {
                 {mode === 'shop' && item.consumable && state.inventory[item.id] > 0 && (
                   <button
                     className="item-use-action"
-                    disabled={busy || pendingAction}
+                    disabled={busy}
                     aria-label={`Use ${item.name}`}
                     onClick={() => act({ type: 'item.use', itemId: item.id })}
                   >
@@ -425,9 +425,15 @@ export function CompanionPicker({ value, onChange, busy = false, preview = false
           disabled={busy}
           aria-pressed={value === c.id}
           aria-label={`Choose ${c.name}, ${c.type}`}
+          onPointerEnter={() => preloadCompanion(c.id)}
+          onFocus={() => preloadCompanion(c.id)}
           onClick={() => onChange(c.id)}
         >
-          <SpritePet species={c.id} mood={preview && value === c.id ? 'playful' : 'idle'} />
+          <SpritePet
+            species={c.id}
+            mood={preview && value === c.id ? 'playful' : 'idle'}
+            animate={preview && value === c.id}
+          />
           <strong>{c.name}</strong>
           <small>
             <Icon name={c.type === 'Cat' ? 'cat' : 'dog'} size={11} />

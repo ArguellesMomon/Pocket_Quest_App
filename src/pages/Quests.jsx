@@ -7,7 +7,7 @@ import { ScreenHeading, Segments, Pager } from '../components/PhoneUI';
 import Dialog from '../components/Dialog';
 import Icon from '../components/Icon';
 export default function Quests() {
-  const { state, now, addQuest, act, busy, pendingAction } = useGame();
+  const { state, now, addQuest, act, busy } = useGame();
   const [query, setQuery] = useState(''),
     [filter, setFilter] = useState('active'),
     [category, setCategory] = useState('All'),
@@ -124,9 +124,7 @@ export default function Quests() {
       </section>
       <button
         className="suggestion-shortcut"
-        disabled={
-          busy || pendingAction || state.tasks.some((t) => t.title === 'Stretch and breathe')
-        }
+        disabled={busy || state.tasks.some((t) => t.title === 'Stretch and breathe')}
         onClick={() =>
           act({
             type: 'task.create',

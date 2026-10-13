@@ -2,7 +2,13 @@ import { useEffect, useRef, useState } from 'react';
 import { useGame } from '../context';
 import { petStats } from '../../shared/game';
 import { companionFor, frameFor, moodFor, MOODS } from '../../shared/companions';
-export default function SpritePet({ species = 'cat', mood, className = '', label }) {
+export default function SpritePet({
+  species = 'cat',
+  mood,
+  className = '',
+  label,
+  animate = true,
+}) {
   const game = useGame(),
     companion = companionFor(species),
     ref = useRef(null);
@@ -11,7 +17,7 @@ export default function SpritePet({ species = 'cat', mood, className = '', label
     [elapsed, setElapsed] = useState(0);
   const resolvedMood =
     mood || (game?.state ? moodFor(game.state, petStats(game.state, game.now), game.now) : 'idle');
-  const moving = !reduced && game?.state?.settings.motion !== false && visible;
+  const moving = animate && !reduced && game?.state?.settings.motion !== false && visible;
   useEffect(() => {
     const query = matchMedia('(prefers-reduced-motion: reduce)');
     const apply = () => setReduced(query.matches);

@@ -11,7 +11,7 @@ import {
 import Icon from '../components/Icon';
 import Dialog from '../components/Dialog';
 export default function Habitat() {
-  const { state, act, busy, pendingAction } = useGame();
+  const { state, act, busy } = useGame();
   const [tab, setTab] = useState('bag'),
     [rename, setRename] = useState(false),
     [name, setName] = useState(state.pet.name);
@@ -46,7 +46,7 @@ export default function Habitat() {
         ) : (
           <CompanionPicker
             value={state.pet.species}
-            busy={busy || pendingAction}
+            busy={busy}
             onChange={(species) => act({ type: 'pet.switch', species })}
           />
         )}
@@ -79,7 +79,7 @@ export default function Habitat() {
                 required
               />
             </label>
-            <button className="button primary full-width" disabled={busy || pendingAction}>
+            <button className="button primary full-width" disabled={busy}>
               Save
               <Icon name="check" size={17} />
             </button>
