@@ -19,6 +19,9 @@ test('installed guest adventure reloads and earns rewards offline', async ({ pag
     '/backgrounds/daydream.webp',
     '/backgrounds/sunset.webp',
     '/items/berry.webp',
+    '/items/salmon.webp',
+    '/companions/chami.webp',
+    '/companions/chami-idle.webp',
   ])
     expect(await page.evaluate((asset) => fetch(asset).then((r) => r.ok), asset)).toBe(true);
   await page.getByRole('button', { name: 'Toggle light and dark mode' }).click();

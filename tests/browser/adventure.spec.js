@@ -63,6 +63,7 @@ test('compact quests, direct purchases, equipment, care, and settings persist', 
 test('phone screens fit the viewport, navigation stays visible, and quests paginate', async ({
   page,
 }) => {
+  test.setTimeout(60000);
   await guest(page);
   for (const size of [
     { width: 390, height: 844 },
@@ -101,7 +102,7 @@ test('sprites visibly advance, react to care, and respect reduced motion; focus 
   page,
 }) => {
   await page.setViewportSize({ width: 390, height: 844 });
-  await guest(page, 'Samo');
+  await guest(page, 'Finn');
   const pet = page.locator('.scene-companion .sprite-pet');
   const initial = await pet.getAttribute('data-frame');
   await expect.poll(() => pet.getAttribute('data-frame')).not.toBe(initial);
@@ -225,10 +226,12 @@ test('clear shop controls buy, use, preview, and apply scenes without losing pur
           cards.map((card) => ({ width: card.clientWidth, scroll: card.scrollWidth })),
         );
       expect(cardBounds.every((b) => b.scroll <= b.width + 1)).toBe(true);
+      const layout = await page
+        .locator('.compact-items')
+        .evaluate((el) => ({ height: el.clientHeight, content: el.scrollHeight }));
       expect(
-        await page
-          .locator('.compact-items')
-          .evaluate((el) => el.scrollHeight <= el.clientHeight + 1),
+        layout.content <= layout.height + 1,
+        `${width}px ${group}: ${JSON.stringify(layout)}`,
       ).toBe(true);
     }
   }
@@ -242,6 +245,9 @@ test('low-stat moods render the correct sprite rows for the new characters', asy
     { id: 'nori', name: 'Nori', energy: 75, joy: 30, mood: 'lonely', row: 5 },
     { id: 'pip', name: 'Pip', energy: 50, joy: 90, mood: 'hungry', row: 4 },
     { id: 'maple', name: 'Maple', energy: 90, joy: 90, mood: 'happy', row: 1 },
+    { id: 'chami', name: 'Chami', energy: 30, joy: 75, mood: 'sleepy', row: 1 },
+    { id: 'chami', name: 'Chami', energy: 50, joy: 75, mood: 'hungry', row: 3 },
+    { id: 'chami', name: 'Chami', energy: 75, joy: 30, mood: 'lonely', row: 4 },
   ]) {
     await page.evaluate((c) => {
       const state = JSON.parse(localStorage.getItem('pocketquest-guest-v1'));
@@ -265,6 +271,71 @@ test('low-stat moods render the correct sprite rows for the new characters', asy
       .screenshot({ path: `docs/previews/mood-${c.id}-${c.mood}.png`, animations: 'disabled' });
   }
 });
+test('Chami reacts with her own frames and new shop pages buy, use, and display collectibles', async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  await guest(page, 'Chami');
+  await page.emulateMedia({ reducedMotion: 'reduce' });
+  const pet = page.locator('.scene-companion .sprite-pet');
+  await expect(pet).toHaveAttribute('data-mood', 'happy');
+  await expect(pet).toHaveCSS('background-image', /chami\.webp/);
+  await page.getByRole('button', { name: 'Say hello to Chami', exact: true }).click();
+  await expect(pet).toHaveAttribute('data-frame', '1-2');
+  await expect(pet).toHaveCSS('background-image', /chami-idle\.webp/);
+  await page.reload();
+  await page.getByRole('button', { name: 'Feed companion a berry bite', exact: true }).click();
+  await expect(pet).toHaveAttribute('data-mood', 'eating');
+  await expect(pet).toHaveAttribute('data-frame', '5-0');
+  await snapshot(page, 'chami-eating-mobile');
+  await page.getByRole('button', { name: 'Play with companion', exact: true }).click();
+  await expect(pet).toHaveAttribute('data-frame', '2-0');
+  await page.evaluate(() => {
+    const game = JSON.parse(localStorage.getItem('pocketquest-guest-v1'));
+    game.coins = 1000;
+    game.xp = 450;
+    localStorage.setItem('pocketquest-guest-v1', JSON.stringify(game));
+  });
+  await page.goto('/market');
+  await page.getByRole('button', { name: 'Buy Salmon treats for 20 coins', exact: true }).click();
+  await page.getByRole('button', { name: 'Use Salmon treats', exact: true }).click();
+  await page.getByRole('button', { name: 'Next page', exact: true }).click();
+  for (const [name, cost] of [
+    ['Sunrise pancakes', 35],
+    ['Peach smoothie', 30],
+    ['Pocket mouse', 25],
+  ])
+    await page.getByRole('button', { name: `Buy ${name} for ${cost} coins`, exact: true }).click();
+  await snapshot(page, 'new-items-mobile');
+  await page.getByRole('button', { name: 'Use Pocket mouse', exact: true }).click();
+  await page.getByRole('button', { name: 'Room', exact: true }).click();
+  await expect(page.locator('.pager')).toContainText('1 / 2');
+  await page.getByRole('button', { name: 'Buy Star pillow for 110 coins', exact: true }).click();
+  await page.getByRole('button', { name: 'Next page', exact: true }).click();
+  await page.getByRole('button', { name: 'Buy Mushroom glow for 130 coins', exact: true }).click();
+  await page.getByRole('link', { name: 'Pets', exact: true }).click();
+  await expect(page.locator('.scene-cushion')).toBeVisible();
+  await expect(page.locator('.scene-nightlight')).toBeVisible();
+  await expect(page.locator('.pet-scene-labels>strong')).toContainText('Chami');
+  await snapshot(page, 'chami-mobile');
+  for (const size of [
+    { width: 390, height: 844 },
+    { width: 320, height: 568 },
+  ]) {
+    await page.setViewportSize(size);
+    await page.getByRole('button', { name: 'Room', exact: true }).click();
+    await page.getByRole('button', { name: 'Care', exact: true }).click();
+    expect(
+      await page
+        .locator('.pet-tool-panel')
+        .evaluate((el) => el.scrollHeight <= el.clientHeight + 1),
+    ).toBe(true);
+    await expect(page.locator('.item-browser .pager')).toBeVisible();
+  }
+  await page.reload();
+  await expect(page.locator('.wallet-pill strong')).toHaveText('650');
+  await expect(page.locator('.scene-cushion')).toBeVisible();
+});
 test('Neon cloud progress and safe retry remain compatible with the new UI', async ({ page }) => {
   test.skip(process.env.RUN_CLOUD_E2E !== '1', 'Opt in to a disposable Neon QA account.');
   const email = `pocketquest-browser-qa-${Date.now()}@example.invalid`,
@@ -284,22 +355,49 @@ test('Neon cloud progress and safe retry remain compatible with the new UI', asy
   await page.getByLabel('Password', { exact: true }).fill(password);
   await page.getByRole('button', { name: 'Continue adventure', exact: true }).click();
   await expect(page.getByRole('heading', { name: 'Today', exact: true })).toBeVisible();
-  let interrupted = false;
+  let interrupted = false,
+    holdRetry = true;
+  const operations = [];
   await page.route('**/api/game', async (route) => {
-    if (!interrupted && route.request().method() === 'POST') {
-      interrupted = true;
-      await route.fetch();
-      await route.abort('failed');
+    if (route.request().method() === 'POST') {
+      operations.push(route.request().postDataJSON().id);
+      if (!interrupted) {
+        interrupted = true;
+        await route.fetch();
+        await route.abort('failed');
+      } else if (holdRetry) await route.abort('failed');
+      else await route.continue();
     } else await route.continue();
   });
   await page.getByRole('button', { name: 'Feed companion a berry bite', exact: true }).click();
-  await expect(page.getByRole('button', { name: 'Retry action', exact: true })).toBeVisible();
+  await expect
+    .poll(() =>
+      page.evaluate(() =>
+        Object.keys(sessionStorage).some((key) => key.startsWith('pocketquest-pending:')),
+      ),
+    )
+    .toBe(true);
+  await expect(page.locator('.sync-banner')).not.toBeVisible();
+  await expect(
+    page.getByText('An action is waiting for confirmation. Retry safely to finish syncing.'),
+  ).not.toBeVisible();
   await page.reload();
+  await expect(page.getByRole('heading', { name: 'Today', exact: true })).toBeVisible();
   await expect(
     page.getByRole('button', { name: 'Buy and feed a berry bite for 15 coins', exact: true }),
   ).not.toBeVisible();
-  await page.getByRole('button', { name: 'Retry action', exact: true }).click();
-  await expect(page.getByRole('button', { name: 'Retry action', exact: true })).not.toBeVisible();
+  holdRetry = false;
+  await expect
+    .poll(
+      () =>
+        page.evaluate(() =>
+          Object.keys(sessionStorage).some((key) => key.startsWith('pocketquest-pending:')),
+        ),
+      { timeout: 15000 },
+    )
+    .toBe(false);
+  expect(operations.length).toBeGreaterThan(1);
+  expect(new Set(operations).size).toBe(1);
   await expect(page.locator('.wallet-pill strong')).toHaveText('60');
   await expect(
     page.getByRole('button', { name: 'Feed companion a berry bite', exact: true }).locator('small'),

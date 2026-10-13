@@ -67,6 +67,16 @@ export function HabitatArt({ state, onPet, compact = false, celebrating = false,
         src={`/backgrounds/${background}.webp`}
         alt={BACKGROUNDS[background]}
       />
+      {state?.equipped.decor.includes('cushion') && (
+        <span className="scene-decor scene-cushion">
+          <ItemArt type="cushion" />
+        </span>
+      )}
+      {state?.equipped.decor.includes('nightlight') && (
+        <span className="scene-decor scene-nightlight">
+          <ItemArt type="nightlight" />
+        </span>
+      )}
       {state?.equipped.habitat === 'mushroom' && (
         <span className="scene-cottage">
           <ItemArt type="mushroom" />
@@ -112,7 +122,20 @@ export function HabitatArt({ state, onPet, compact = false, celebrating = false,
     </div>
   );
 }
-const RASTER_ITEMS = ['berry', 'tea', 'ball', 'book', 'plant', 'lamp'];
+const RASTER_ITEMS = [
+  'berry',
+  'tea',
+  'ball',
+  'book',
+  'plant',
+  'lamp',
+  'salmon',
+  'pancakes',
+  'smoothie',
+  'mouse',
+  'cushion',
+  'nightlight',
+];
 export function ItemArt({ type, className = '' }) {
   if (BACKGROUNDS[type])
     return (

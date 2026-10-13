@@ -11,21 +11,21 @@ npm install
 npm run dev
 ```
 
-Open **http://127.0.0.1:5175**. Guest mode works without database credentials and saves progress in this browser. Choose Mochi or Nori (cats), Pip or Maple (dogs), or the supplied Samo dog.
+Open **http://127.0.0.1:5175**. Guest mode works without database credentials and saves progress in this browser. Choose Mochi, Nori, or Chami (cats), or Pip, Maple, or Finn (dogs).
 
 ## What works
 
 - Compact Today, Quests, Pets, Shop, Stats, and Settings screens; longer lists use pagination and category tabs.
 - One-time quests and daily rituals, effort-based rewards, due dates, categories, search, sorting, editing, and removal.
 - Daily three-quest bonus, timezone-aware resets and streaks, companion levels, and six earned milestones.
-- Ten purchasable items, consumable food/toys, level unlocks, room decor, and illustrated backgrounds. A free Dream garden is always available.
-- Four newly generated sprite characters plus the supplied Samo sheet, with real frame animation, stat-driven moods, feeding/play reactions, celebration, and bounded idle stat decay.
+- Sixteen purchasable items, including five foods, toys, room decor, and illustrated backgrounds. Shop pages show four items at a time. A free Dream garden is always available.
+- Six animated companions with stat-driven moods, feeding/play reactions, celebration, and bounded idle stat decay. Chami combines eight supplied frames with 24 new mood poses; Finn uses the original Samoyed sheet.
 - Focus timer with pause/resume and deadline persistence across navigation/reload.
 - Light, dark, and system themes; reduced motion; optional victory sounds; data export.
 - Desktop sidebar, fixed mobile navigation, reachable add/care actions, keyboard-accessible sheets, and offline PWA assets.
 - Clear Buy/Use/Apply controls, animated scene previews, a pet-side Scene shortcut, and labeled New quest buttons. Quick care uses inventory first and buys/uses a snack or toy atomically when the bag is empty.
 - Email/password accounts, signup, sign-in/out, email-code UI, and password recovery/reset UI through Neon Auth.
-- Server-validated cloud actions, atomic rewards/purchases, owner isolation, and idempotent retries.
+- Server-validated cloud actions, atomic rewards/purchases, owner isolation, and automatic idempotent retries. Pending requests recover quietly in the background; Account settings show a compact save status.
 
 Guest and cloud adventures are separate. Guest progress stays on this device; account progress is saved in Neon.
 

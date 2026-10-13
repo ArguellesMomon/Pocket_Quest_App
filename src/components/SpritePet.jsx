@@ -47,9 +47,9 @@ export default function SpritePet({ species = 'cat', mood, className = '', label
       data-frame={`${frame.row}-${frame.column}`}
       style={{
         '--sprite-aspect': companion.id === 'samo' ? '192 / 208' : '1',
-        backgroundImage: `url('/companions/${companion.sheet || 'mochi.webp'}')`,
-        backgroundSize: `${companion.columns * 100 || 400}% ${companion.rows * 100 || 600}%`,
-        backgroundPosition: `${(frame.column / ((companion.columns || 4) - 1)) * 100}% ${(frame.row / ((companion.rows || 6) - 1)) * 100}%`,
+        backgroundImage: `url('/companions/${frame.sheet || companion.sheet || 'mochi.webp'}')`,
+        backgroundSize: `${(frame.columns || companion.columns || 4) * 100}% ${(frame.rows || companion.rows || 6) * 100}%`,
+        backgroundPosition: `${(frame.column / ((frame.columns || companion.columns || 4) - 1)) * 100}% ${(frame.row / ((frame.rows || companion.rows || 6) - 1)) * 100}%`,
       }}
     />
   );

@@ -2,14 +2,19 @@ import sharp from 'sharp';
 import { mkdir, writeFile } from 'node:fs/promises';
 await mkdir('public/companions', { recursive: true });
 const report = {};
-for (const name of ['mochi', 'nori', 'pip', 'maple']) {
-  const source = `assets/companions/source/${name}.png`;
+for (const name of ['mochi', 'nori', 'pip', 'maple', 'chami', 'chami-idle']) {
+  const rows = name === 'chami-idle' ? 2 : 6;
+  const source =
+    name === 'chami-idle'
+      ? 'assets/reference/chami/spritesheet.png'
+      : `assets/companions/source/${name}.png`;
   const { data, info } = await sharp(source)
     .ensureAlpha()
     .raw()
     .toBuffer({ resolveWithObject: true });
   const { width, height } = info;
-  if (width / height !== 2 / 3) throw new Error(`${name}: expected a 4 × 6 square-cell sheet.`);
+  if (width / height !== 4 / rows)
+    throw new Error(`${name}: expected a 4 × ${rows} square-cell sheet.`);
   const visited = new Uint8Array(width * height),
     components = [],
     queue = new Int32Array(width * height);
@@ -51,12 +56,23 @@ for (const name of ['mochi', 'nori', 'pip', 'maple']) {
   const cells = new Map();
   for (const c of components) {
     const column = Math.min(3, Math.floor((c.minX + c.maxX) / 2 / (width / 4)));
-    const row = Math.min(5, Math.floor((c.minY + c.maxY) / 2 / (height / 6)));
+    const row = Math.min(rows - 1, Math.floor((c.minY + c.maxY) / 2 / (height / rows)));
     const key = row * 4 + column;
-    if (!cells.has(key) || c.count > cells.get(key).count) cells.set(key, c);
+    const previous = cells.get(key);
+    if (name === 'chami' && row === 5 && previous) {
+      cells.set(key, {
+        minX: Math.min(previous.minX, c.minX),
+        minY: Math.min(previous.minY, c.minY),
+        maxX: Math.max(previous.maxX, c.maxX),
+        maxY: Math.max(previous.maxY, c.maxY),
+        count: previous.count + c.count,
+      });
+    } else if (!previous || c.count > previous.count) cells.set(key, c);
   }
-  if (cells.size !== 24)
-    throw new Error(`${name}: found ${cells.size}/24 silhouettes; inspect the source sheet.`);
+  if (cells.size !== rows * 4)
+    throw new Error(
+      `${name}: found ${cells.size}/${rows * 4} silhouettes; inspect the source sheet.`,
+    );
   const frame = 192,
     padding = 12;
   const largest = Math.max(
@@ -65,7 +81,7 @@ for (const name of ['mochi', 'nori', 'pip', 'maple']) {
   const scale = (frame - padding * 2) / largest,
     layers = [];
   const bounds = [];
-  for (let index = 0; index < 24; index++) {
+  for (let index = 0; index < rows * 4; index++) {
     const c = cells.get(index);
     const left = Math.max(0, c.minX - 6),
       top = Math.max(0, c.minY - 6);
@@ -86,7 +102,7 @@ for (const name of ['mochi', 'nori', 'pip', 'maple']) {
     bounds.push({ index, left, top, width: cropWidth, height: cropHeight });
   }
   await sharp({
-    create: { width: frame * 4, height: frame * 6, channels: 4, background: '#00000000' },
+    create: { width: frame * 4, height: frame * rows, channels: 4, background: '#00000000' },
   })
     .composite(layers)
     .webp({ lossless: true })
@@ -94,11 +110,11 @@ for (const name of ['mochi', 'nori', 'pip', 'maple']) {
   report[name] = {
     source,
     inputSize: [width, height],
-    grid: [4, 6],
+    grid: [4, rows],
     cell: [frame, frame],
     frames: bounds,
     transparent: true,
   };
-  console.log(`${name}: 24 aligned frames, transparent WebP atlas.`);
+  console.log(`${name}: ${rows * 4} aligned frames, transparent WebP atlas.`);
 }
 await writeFile('assets/companions/atlas-manifest.json', JSON.stringify(report, null, 2));

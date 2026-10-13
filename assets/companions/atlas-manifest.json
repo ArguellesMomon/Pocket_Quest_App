@@ -742,5 +742,265 @@
       }
     ],
     "transparent": true
+  },
+  "chami": {
+    "source": "assets/companions/source/chami.png",
+    "inputSize": [
+      1024,
+      1536
+    ],
+    "grid": [
+      4,
+      6
+    ],
+    "cell": [
+      192,
+      192
+    ],
+    "frames": [
+      {
+        "index": 0,
+        "left": 25,
+        "top": 21,
+        "width": 242,
+        "height": 231
+      },
+      {
+        "index": 1,
+        "left": 282,
+        "top": 21,
+        "width": 231,
+        "height": 231
+      },
+      {
+        "index": 2,
+        "left": 524,
+        "top": 13,
+        "width": 229,
+        "height": 240
+      },
+      {
+        "index": 3,
+        "left": 774,
+        "top": 10,
+        "width": 241,
+        "height": 242
+      },
+      {
+        "index": 4,
+        "left": 11,
+        "top": 266,
+        "width": 255,
+        "height": 172
+      },
+      {
+        "index": 5,
+        "left": 271,
+        "top": 267,
+        "width": 243,
+        "height": 171
+      },
+      {
+        "index": 6,
+        "left": 516,
+        "top": 272,
+        "width": 238,
+        "height": 167
+      },
+      {
+        "index": 7,
+        "left": 765,
+        "top": 269,
+        "width": 242,
+        "height": 169
+      },
+      {
+        "index": 8,
+        "left": 23,
+        "top": 437,
+        "width": 245,
+        "height": 245
+      },
+      {
+        "index": 9,
+        "left": 277,
+        "top": 446,
+        "width": 217,
+        "height": 238
+      },
+      {
+        "index": 10,
+        "left": 520,
+        "top": 437,
+        "width": 252,
+        "height": 249
+      },
+      {
+        "index": 11,
+        "left": 763,
+        "top": 451,
+        "width": 242,
+        "height": 235
+      },
+      {
+        "index": 12,
+        "left": 25,
+        "top": 707,
+        "width": 237,
+        "height": 217
+      },
+      {
+        "index": 13,
+        "left": 284,
+        "top": 690,
+        "width": 221,
+        "height": 238
+      },
+      {
+        "index": 14,
+        "left": 531,
+        "top": 689,
+        "width": 227,
+        "height": 246
+      },
+      {
+        "index": 15,
+        "left": 769,
+        "top": 729,
+        "width": 242,
+        "height": 197
+      },
+      {
+        "index": 16,
+        "left": 17,
+        "top": 944,
+        "width": 257,
+        "height": 236
+      },
+      {
+        "index": 17,
+        "left": 284,
+        "top": 948,
+        "width": 229,
+        "height": 227
+      },
+      {
+        "index": 18,
+        "left": 523,
+        "top": 963,
+        "width": 231,
+        "height": 210
+      },
+      {
+        "index": 19,
+        "left": 775,
+        "top": 932,
+        "width": 239,
+        "height": 244
+      },
+      {
+        "index": 20,
+        "left": 11,
+        "top": 1208,
+        "width": 251,
+        "height": 267
+      },
+      {
+        "index": 21,
+        "left": 255,
+        "top": 1247,
+        "width": 267,
+        "height": 228
+      },
+      {
+        "index": 22,
+        "left": 522,
+        "top": 1212,
+        "width": 257,
+        "height": 263
+      },
+      {
+        "index": 23,
+        "left": 778,
+        "top": 1208,
+        "width": 239,
+        "height": 267
+      }
+    ],
+    "transparent": true
+  },
+  "chami-idle": {
+    "source": "assets/reference/chami/spritesheet.png",
+    "inputSize": [
+      1536,
+      768
+    ],
+    "grid": [
+      4,
+      2
+    ],
+    "cell": [
+      192,
+      192
+    ],
+    "frames": [
+      {
+        "index": 0,
+        "left": 56,
+        "top": 71,
+        "width": 272,
+        "height": 255
+      },
+      {
+        "index": 1,
+        "left": 439,
+        "top": 71,
+        "width": 273,
+        "height": 255
+      },
+      {
+        "index": 2,
+        "left": 822,
+        "top": 72,
+        "width": 274,
+        "height": 254
+      },
+      {
+        "index": 3,
+        "left": 1209,
+        "top": 70,
+        "width": 268,
+        "height": 255
+      },
+      {
+        "index": 4,
+        "left": 56,
+        "top": 455,
+        "width": 272,
+        "height": 254
+      },
+      {
+        "index": 5,
+        "left": 439,
+        "top": 456,
+        "width": 274,
+        "height": 254
+      },
+      {
+        "index": 6,
+        "left": 821,
+        "top": 454,
+        "width": 276,
+        "height": 254
+      },
+      {
+        "index": 7,
+        "left": 1209,
+        "top": 456,
+        "width": 269,
+        "height": 255
+      }
+    ],
+    "transparent": true
   }
 }

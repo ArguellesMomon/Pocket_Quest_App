@@ -30,12 +30,21 @@ export const COMPANIONS = [
   },
   {
     id: 'samo',
-    name: 'Samo',
+    name: 'Finn',
     type: 'Dog',
     color: '#dde2d5',
     sheet: 'samo.webp',
     columns: 8,
     rows: 9,
+  },
+  {
+    id: 'chami',
+    name: 'Chami',
+    type: 'Cat',
+    color: '#e79b51',
+    sheet: 'chami.webp',
+    columns: 4,
+    rows: 6,
   },
   { id: 'fox', name: 'Ember', type: 'Fox', color: '#d79b6f', legacy: true },
   { id: 'bunny', name: 'Clover', type: 'Rabbit', color: '#dfccdd', legacy: true },
@@ -83,6 +92,20 @@ export function moodFor(state, stats, now = Date.now(), interacting = false) {
 export function frameFor(companion, mood, elapsed = 0, moving = true) {
   const definition = MOODS[mood] || MOODS.idle;
   const position = moving ? Math.floor(elapsed / definition.speed) % definition.frames.length : 0;
+  if (companion.id === 'chami') {
+    if (['idle', 'curious', 'walking'].includes(mood))
+      return {
+        row: mood === 'idle' ? 0 : 1,
+        column: definition.frames[position],
+        sheet: 'chami-idle.webp',
+        rows: 2,
+        columns: 4,
+      };
+    const row =
+      { happy: 0, sleepy: 1, playful: 2, celebrating: 2, hungry: 3, lonely: 4, eating: 5 }[mood] ??
+      0;
+    return { row, column: definition.frames[position] };
+  }
   if (companion.id !== 'samo') return { row: definition.row, column: definition.frames[position] };
   const original = {
     idle: { row: 0, frames: [0, 0, 1, 2, 3, 4, 5, 0] },

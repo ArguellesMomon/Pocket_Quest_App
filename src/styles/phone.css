@@ -2820,6 +2820,31 @@ legend {
   width: 11%;
   max-width: 64px;
 }
+.scene-cushion {
+  left: 50%;
+  bottom: 1%;
+  width: 26%;
+  max-width: 144px;
+  transform: translateX(-50%) scaleY(0.5);
+  transform-origin: center bottom;
+  animation: none;
+}
+.scene-nightlight {
+  left: 25%;
+  bottom: 6%;
+  width: 10%;
+  max-width: 62px;
+}
+.account-sync-status {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  color: var(--muted);
+}
+.account-sync-status .icon-button {
+  margin-left: auto;
+}
 .background-shortcut {
   position: absolute;
   right: 9px;
@@ -2957,6 +2982,29 @@ legend {
 .item-tile h3 {
   font-size: 12px;
 }
+.item-browser.bag .compact-items {
+  grid-template-columns: minmax(0, 1fr);
+  gap: 8px;
+}
+.item-browser.bag .item-tile {
+  grid-template-columns: 44px minmax(0, 1fr) 64px;
+  grid-template-rows: auto;
+  padding: 8px;
+  gap: 8px;
+  min-height: 62px;
+  align-items: center;
+}
+.item-browser.bag .item-preview {
+  height: 44px;
+  width: 44px;
+  grid-row: auto;
+}
+.item-browser.bag .item-tile-info {
+  display: block;
+}
+.item-browser.bag .item-action {
+  width: 100%;
+}
 .quick-care .item-art {
   object-fit: contain;
 }
@@ -2988,11 +3036,11 @@ legend {
 }
 @media (max-width: 350px), (max-height: 700px) and (max-width: 760px) {
   .item-tile {
-    padding: 8px;
-    gap: 6px;
+    padding: 7px;
+    gap: 4px;
   }
   .item-preview {
-    height: 52px;
+    height: 38px;
   }
   .item-tile h3 {
     font-size: 11px;
@@ -3013,5 +3061,21 @@ legend {
   }
   .scene-tile .item-tile-info {
     min-height: 25px;
+  }
+  .item-browser {
+    gap: 8px;
+  }
+  .compact-items {
+    gap: 8px;
+  }
+  .item-browser > .pager {
+    height: 36px;
+  }
+  .item-browser > .pager .icon-button {
+    width: 36px;
+    height: 36px;
+  }
+  .pets-page .pet-scene.large .habitat-art {
+    height: 95px;
   }
 }

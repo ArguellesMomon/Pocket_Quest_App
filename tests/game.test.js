@@ -119,6 +119,38 @@ test('background purchases apply immediately, retain decor and companion, and re
     false,
   );
 });
+test('Finn rename preserves custom names and Chami joins without resetting progress', () => {
+  const old = createGame('samo', now);
+  old.pet.name = 'Samo';
+  assert.equal(upgradeGame(old).pet.name, 'Finn');
+  old.pet.name = 'Snowball';
+  assert.equal(upgradeGame(old).pet.name, 'Snowball');
+  const chami = action(old, 'pet.switch', { species: 'chami' });
+  assert.equal(chami.pet.name, 'Chami');
+  assert.equal(chami.coins, old.coins);
+  assert.deepEqual(chami.inventory, old.inventory);
+});
+test('new collectibles have authoritative prices and usable food, toys, and room effects', () => {
+  let state = createGame('chami', now);
+  state.xp = 450;
+  state.coins = 500;
+  state.pet.energy = 20;
+  state.pet.joy = 20;
+  for (const id of ['salmon', 'pancakes', 'smoothie', 'mouse', 'cushion', 'nightlight']) {
+    const item = CATALOG.find((item) => item.id === id);
+    const before = state.coins;
+    state = action(state, 'item.buy', { itemId: id, equip: true, cost: 0 });
+    assert.equal(state.coins, before - item.cost);
+    if (item.consumable) {
+      state = action(state, 'item.use', { itemId: id });
+      assert.equal(state.inventory[id], 0);
+    } else assert.ok(state.equipped.decor.includes(id));
+  }
+  assert.equal(state.careCount, 4);
+  assert.equal(state.pet.energy, 100);
+  assert.equal(state.pet.joy, 80);
+  assert.equal(new Set(CATALOG.map((item) => item.id)).size, CATALOG.length);
+});
 test('custom quests validate fields; deletion preserves past progress', () => {
   let state = createGame('cat', now);
   const fields = {

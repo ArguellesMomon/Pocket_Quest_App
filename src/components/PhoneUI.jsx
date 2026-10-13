@@ -176,12 +176,14 @@ export function ItemBrowser({ mode = 'shop' }) {
   const { state, act, busy, pendingAction } = useGame();
   const [params, setParams] = useSearchParams();
   const [bagGroup, setBagGroup] = useState('care'),
+    [page, setPage] = useState(0),
     [selected, setSelected] = useState(null);
   const group =
     mode === 'shop' && GROUPS.some((g) => g.id === params.get('tab'))
       ? params.get('tab')
       : bagGroup;
   const setGroup = (value) => {
+    setPage(0);
     setBagGroup(value);
     if (mode === 'shop') setParams({ tab: value }, { replace: true });
   };
@@ -202,6 +204,10 @@ export function ItemBrowser({ mode = 'shop' }) {
       description: 'Your little patch of daydream. Always yours.',
     });
   }
+  const pageSize = mode === 'bag' ? (window.innerHeight < 700 ? 1 : 2) : 4;
+  const pages = Math.ceil(items.length / pageSize),
+    pageIndex = Math.min(page, Math.max(0, pages - 1));
+  const visibleItems = items.slice(pageIndex * pageSize, (pageIndex + 1) * pageSize);
   const effect = (item) =>
     item.consumable ? (
       <>
@@ -254,11 +260,11 @@ export function ItemBrowser({ mode = 'shop' }) {
     (item.free && equipped(item)) ||
     (action(item).type === 'item.buy' && state.coins < item.cost);
   return (
-    <div className="item-browser">
+    <div className={`item-browser ${mode}`}>
       <Segments label="Item category" options={GROUPS} value={group} onChange={setGroup} />
       <div className="compact-items">
         {items.length ? (
-          items.map((item) => (
+          visibleItems.map((item) => (
             <article
               className={`item-tile ${item.category === 'Backgrounds' ? 'scene-tile' : ''} ${equipped(item) ? 'is-applied' : ''} ${level < item.level ? 'locked' : ''}`}
               key={item.id}
@@ -275,10 +281,13 @@ export function ItemBrowser({ mode = 'shop' }) {
                       `×${state.inventory[item.id]}`
                     ) : equipped(item) ? (
                       <>
-                        <Icon name="check" size={12} /> Applied
+                        <Icon name="check" size={12} />
+                        {mode === 'shop' && 'Applied'}
                       </>
-                    ) : (
+                    ) : mode === 'shop' ? (
                       <>Owned</>
+                    ) : (
+                      <Icon name="backpack" size={12} />
                     )}
                   </span>
                 )}
@@ -360,6 +369,7 @@ export function ItemBrowser({ mode = 'shop' }) {
           </div>
         )}
       </div>
+      <Pager page={pageIndex} count={pages} onChange={setPage} />
       {selected && (
         <Dialog title={selected.name} onClose={() => setSelected(null)}>
           <div className="dialog-body item-detail">

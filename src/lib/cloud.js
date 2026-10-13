@@ -15,7 +15,16 @@ export async function cloudRequest(action) {
     signal: AbortSignal.timeout(15000),
   });
   const tokenData = await tokenResponse.json();
-  if (!tokenResponse.ok || !tokenData?.token) {
+  if (!tokenResponse.ok) {
+    const error = new Error(
+      tokenResponse.status >= 500
+        ? 'The account service is temporarily unavailable.'
+        : 'Please sign in again to sync your adventure.',
+    );
+    error.status = tokenResponse.status;
+    throw error;
+  }
+  if (!tokenData?.token) {
     const error = new Error('Please sign in again to sync your adventure.');
     error.status = 401;
     throw error;

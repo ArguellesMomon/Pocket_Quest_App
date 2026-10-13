@@ -64,7 +64,7 @@ function ThemeButton() {
   );
 }
 function Shell({ children, onAdd, onHelp }) {
-  const { state, user, busy, now, error, pendingAction, retry, restore } = useGame();
+  const { state, user, busy, now, error, pendingAction, restore } = useGame();
   const location = useLocation();
   const active = destinations.find((d) => d.path === location.pathname);
   return (
@@ -135,16 +135,12 @@ function Shell({ children, onAdd, onHelp }) {
             </button>
           </div>
         </header>
-        {(error || pendingAction) && (
+        {error && !pendingAction && (
           <div className="sync-banner" role="alert">
             <Icon name="cloud" size={18} />
-            <span>
-              {pendingAction
-                ? 'An action is waiting for confirmation. Retry safely to finish syncing.'
-                : error}
-            </span>
-            <button onClick={pendingAction ? retry : restore} disabled={busy}>
-              {busy ? 'Syncing…' : pendingAction ? 'Retry action' : 'Reconnect'}
+            <span>{error}</span>
+            <button onClick={restore} disabled={busy}>
+              {busy ? 'Syncing…' : 'Reconnect'}
             </button>
           </div>
         )}

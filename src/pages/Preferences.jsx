@@ -5,7 +5,7 @@ import { ScreenHeading, Segments } from '../components/PhoneUI';
 import Icon from '../components/Icon';
 import Dialog from '../components/Dialog';
 export default function Preferences() {
-  const { state, user, act, busy, pendingAction, signOut, toast, openHelp } = useGame();
+  const { state, user, act, busy, pendingAction, signOut, toast, openHelp, retry } = useGame();
   const [tab, setTab] = useState('look'),
     [logout, setLogout] = useState(false),
     [signingOut, setSigningOut] = useState(false);
@@ -170,6 +170,22 @@ export default function Preferences() {
             <Icon name="cloud" size={35} />
             <h2>{user ? 'Cloud adventure' : 'Guest adventure'}</h2>
             <p>{user ? user.email : 'Saved on this device.'}</p>
+            {user && (
+              <div className="account-sync-status" role="status">
+                <Icon name="cloud" size={15} />
+                <span>{pendingAction ? 'Saving…' : 'Saved'}</span>
+                {pendingAction && (
+                  <button
+                    className="icon-button"
+                    disabled={busy}
+                    onClick={retry}
+                    aria-label="Retry sync"
+                  >
+                    <Icon name="reset" size={15} />
+                  </button>
+                )}
+              </div>
+            )}
             {!user && (
               <Link className="button primary full-width" to="/login">
                 Sign in

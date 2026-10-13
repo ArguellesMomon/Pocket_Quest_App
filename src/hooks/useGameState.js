@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { applyAction, createGame, dayKey, upgradeGame } from '../../shared/game.js';
 import { auth, cloudConfigured, cloudRequest } from '../lib/cloud.js';
+import { retryableSyncError, retryDelay } from '../lib/sync-policy.js';
 const KEY = 'pocketquest-guest-v1';
 function readGuest() {
   try {
@@ -39,6 +40,7 @@ export function useGameState() {
     version = useRef(0),
     mode = useRef('guest');
   const pending = useRef(null);
+  const retryAttempts = useRef(0);
   const [pendingAction, setPendingAction] = useState(false);
   const timer = useRef(null);
   const toast = useCallback((message, kind = 'success') => {
@@ -122,9 +124,8 @@ export function useGameState() {
   );
   const act = useCallback(
     async (input, retry = false) => {
-      if (lock.current || !stateRef.current) return false;
+      if (lock.current || !stateRef.current || (retry && !pending.current)) return false;
       if (pending.current && !retry) {
-        toast('Retry the pending action before starting another.', 'error');
         return false;
       }
       lock.current = true;
@@ -153,6 +154,7 @@ export function useGameState() {
           result = navigator.locks ? await navigator.locks.request(KEY, apply) : apply();
         }
         pending.current = null;
+        retryAttempts.current = 0;
         setPendingAction(false);
         accept(result.state);
         setError('');
@@ -178,18 +180,16 @@ export function useGameState() {
         return true;
       } catch (e) {
         // Validation errors are definite failures. Unknown transport outcomes retain the same operation ID for a safe retry.
-        if (
-          !userRef.current ||
-          e.status === 400 ||
-          e.status === 413 ||
-          !/fetch|network|timeout|sync|session|sign in/i.test(e.message)
-        ) {
+        const willRetry = Boolean(userRef.current) && retryableSyncError(e);
+        if (!willRetry) {
           pending.current = null;
           setPendingAction(false);
           if (userRef.current)
             sessionStorage.removeItem(`pocketquest-pending:${userRef.current.id}`);
         }
-        toast(e.message, 'error');
+        if (willRetry) {
+          if (retry) retryAttempts.current++;
+        } else toast(e.message, 'error');
         if (e.status === 401) await restore();
         return false;
       } finally {
@@ -199,6 +199,25 @@ export function useGameState() {
     },
     [accept, toast, restore],
   );
+  useEffect(() => {
+    if (!pendingAction || busy || !user || !ready) return;
+    const resume = () => {
+      if (navigator.onLine && !document.hidden && pending.current && !lock.current) act(null, true);
+    };
+    const timeout =
+      navigator.onLine && !document.hidden
+        ? setTimeout(resume, retryDelay(retryAttempts.current))
+        : null;
+    window.addEventListener('online', resume);
+    window.addEventListener('focus', resume);
+    document.addEventListener('visibilitychange', resume);
+    return () => {
+      clearTimeout(timeout);
+      window.removeEventListener('online', resume);
+      window.removeEventListener('focus', resume);
+      document.removeEventListener('visibilitychange', resume);
+    };
+  }, [pendingAction, busy, user, ready, act]);
   const signOut = useCallback(async () => {
     if (auth && userRef.current) {
       const result = await auth.signOut();

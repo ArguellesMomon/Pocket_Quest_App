@@ -71,7 +71,9 @@ test('friend switching preserves progress, equipment purchases can equip atomica
     ]) {
       for (const at of [0, 300, 700, 1500, 3000]) {
         const frame = frameFor(c, mood, at);
-        assert.ok(frame.row < c.rows && frame.column < c.columns);
+        assert.ok(
+          frame.row < (frame.rows || c.rows) && frame.column < (frame.columns || c.columns),
+        );
       }
       assert.deepEqual(frameFor(c, mood, 0, false), frameFor(c, mood, 5000, false));
     }
