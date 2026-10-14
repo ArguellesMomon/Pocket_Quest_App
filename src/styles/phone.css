@@ -439,6 +439,60 @@ legend {
   align-items: center;
   gap: 16px;
 }
+.profile-menu {
+  position: relative;
+}
+.profile-menu > .topbar-avatar {
+  display: inline-flex;
+}
+.profile-menu-panel {
+  position: absolute;
+  top: calc(100% + 10px);
+  right: 0;
+  z-index: 90;
+  width: 224px;
+  padding: 6px;
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  background: var(--surface);
+  color: var(--ink);
+  box-shadow: 0 12px 36px #140d2633;
+}
+.profile-menu-name {
+  display: grid;
+  gap: 3px;
+  padding: 10px;
+  border-bottom: 1px solid var(--border);
+  margin-bottom: 4px;
+  overflow-wrap: anywhere;
+}
+.profile-menu-name strong {
+  font-size: 13px;
+}
+.profile-menu-name small {
+  font-size: 10px;
+  color: var(--muted);
+}
+.profile-menu-panel > a,
+.profile-menu-panel > button {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  width: 100%;
+  min-height: 44px;
+  padding: 10px;
+  border-radius: 10px;
+  background: transparent;
+  text-align: left;
+  font-size: 12px;
+}
+.profile-menu-panel > a:hover,
+.profile-menu-panel > button:hover {
+  background: var(--accent-soft);
+}
+.profile-menu-panel svg {
+  color: var(--accent);
+}
 .wallet-pill,
 .streak-pill {
   display: inline-flex;
@@ -1454,6 +1508,91 @@ legend {
   font-size: 15px;
   margin-bottom: 14px;
 }
+.sound-settings {
+  display: grid;
+  gap: 12px;
+}
+.background-music-card {
+  display: grid;
+  grid-template-columns: 48px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 12px;
+  padding: 14px;
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  background: var(--bg);
+}
+.music-cover {
+  position: relative;
+  width: 48px;
+  height: 48px;
+  border-radius: 12px;
+  overflow: hidden;
+}
+.music-cover img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.music-cover svg {
+  position: absolute;
+  left: 13px;
+  top: 13px;
+  color: #352749;
+  filter: drop-shadow(0 0 4px #fff);
+}
+.music-title {
+  display: grid;
+  gap: 4px;
+}
+.music-title strong {
+  font-size: 13px;
+}
+.music-title small {
+  font-size: 10px;
+  color: var(--muted);
+}
+.music-volume {
+  grid-column: 1 / -1;
+}
+.music-volume label {
+  flex-direction: row;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 11px;
+}
+.music-volume output {
+  color: var(--muted);
+  font-size: 10px;
+}
+.music-volume input[type='range'] {
+  width: 100%;
+  padding: 0;
+  accent-color: var(--accent);
+  background: transparent;
+  border: 0;
+  min-height: 32px;
+}
+.music-playback-state {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  min-height: 18px;
+}
+.music-playback-state > small,
+.sound-settings-note {
+  color: var(--muted);
+  font-size: 10px;
+  line-height: 1.5;
+}
+.music-playback-state > .icon-button {
+  width: 32px;
+  height: 32px;
+}
+.sound-settings .setting-row {
+  padding-block: 12px;
+}
 .theme-options {
   display: flex;
   gap: 8px;
@@ -2183,6 +2322,12 @@ legend {
     display: inline-flex;
     width: 32px;
     height: 36px;
+  }
+  .profile-menu > .topbar-avatar {
+    width: 32px;
+    height: 36px;
+    border-radius: 11px;
+    font-size: 12px;
   }
   .wallet-pill,
   .streak-pill {

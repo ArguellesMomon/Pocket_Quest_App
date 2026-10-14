@@ -21,13 +21,6 @@ import CompanionChat from '../components/CompanionChat';
 import { feedback } from '../lib/feedback';
 import '../styles/today.css';
 
-function readHaptics(key) {
-  try {
-    return localStorage.getItem(key) !== 'off';
-  } catch {
-    return true;
-  }
-}
 export default function Today() {
   const game = useGame();
   const { state, now, busy } = game;
@@ -35,13 +28,10 @@ export default function Today() {
     [drawer, setDrawer] = useState(null);
   const [receipt, setReceipt] = useState(null),
     [helloUntil, setHelloUntil] = useState(0);
-  const feedbackKey = `pocketquest-touch:${game.user?.id || 'guest'}`;
-  const [haptics, setHaptics] = useState(() => readHaptics(feedbackKey));
   const completing = useRef(false),
     nextButton = useRef(null),
     completeButton = useRef(null),
     hadReward = useRef(false);
-  useEffect(() => setHaptics(readHaptics(feedbackKey)), [feedbackKey]);
   const today = dayKey(now, state.timezone);
   const wins = state.completions.filter((win) => win.day === today).sort((a, b) => b.at - a.at);
   const done = wins.length,
@@ -66,7 +56,8 @@ export default function Today() {
       completeButton.current?.focus();
     }
   }, [earned, drawer]);
-  const cue = (kind = 'tap') => feedback(kind, { sound: state.settings.sound, haptics });
+  const cue = (kind = 'tap') =>
+    feedback(kind, { sound: state.settings.sound, haptics: game.audio.haptics });
   async function act(action) {
     if (completing.current) return false;
     completing.current = true;
@@ -125,13 +116,6 @@ export default function Today() {
         }}
       >
         <ScreenHeading title="Today" subtitle={date}>
-          <button
-            className="icon-button today-feedback-button"
-            aria-label="Sound and touch feedback"
-            onClick={() => setDrawer('feedback')}
-          >
-            <Icon name={state.settings.sound ? 'volume' : 'volume-off'} size={19} />
-          </button>
           <button
             className="button primary new-quest-button"
             aria-label="Add a quest"
@@ -431,55 +415,6 @@ export default function Today() {
                   Complete
                 </button>
               </div>
-            </div>
-          </Dialog>
-        )}
-        {drawer === 'feedback' && (
-          <Dialog title="Sound & touch" onClose={() => setDrawer(null)}>
-            <div className="dialog-body today-feedback-sheet">
-              <div className="setting-row">
-                <strong>
-                  <Icon name="volume" size={18} />
-                  Sounds
-                </strong>
-                <button
-                  role="switch"
-                  aria-label="Sounds"
-                  aria-checked={state.settings.sound}
-                  className={`toggle ${state.settings.sound ? 'on' : ''}`}
-                  disabled={busy}
-                  onClick={() => {
-                    const sound = !state.settings.sound;
-                    if (sound) feedback('care', { sound: true });
-                    act({ type: 'settings.update', settings: { ...state.settings, sound } });
-                  }}
-                >
-                  <span />
-                </button>
-              </div>
-              <div className="setting-row">
-                <strong>
-                  <Icon name="zap" size={18} />
-                  Haptics
-                </strong>
-                <button
-                  role="switch"
-                  aria-label="Haptics"
-                  aria-checked={haptics}
-                  className={`toggle ${haptics ? 'on' : ''}`}
-                  onClick={() => {
-                    const value = !haptics;
-                    setHaptics(value);
-                    try {
-                      localStorage.setItem(feedbackKey, value ? 'on' : 'off');
-                    } catch {}
-                    if (value) feedback('tap', { haptics: true });
-                  }}
-                >
-                  <span />
-                </button>
-              </div>
-              <small>Gentle feedback. Haptics work on supported devices.</small>
             </div>
           </Dialog>
         )}

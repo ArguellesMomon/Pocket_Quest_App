@@ -23,6 +23,7 @@ Open **http://127.0.0.1:5175**. Guest mode works without database credentials an
 - Six animated companions with stat-driven moods, feeding/play reactions, celebration, and bounded idle stat decay. Chami combines eight supplied frames with 24 new mood poses; Finn uses the original Samoyed sheet.
 - Signed-in companion chat on Pets: one Groq model, six personalities, separate account/character histories and memory, earlier-message pagination, and individual clear-chat controls.
 - Focus timer with pause/resume and deadline persistence across navigation/reload.
+- Settings → Sounds holds effects, haptics, and the supplied Pocket Quest background track. Music starts at a subtle 12% volume, loops across pages, pauses when hidden, and stays off until enabled. The profile avatar opens an account menu with sign-in/out and profile settings.
 - Light, dark, and system themes; reduced motion; optional victory sounds; data export.
 - Desktop sidebar, fixed mobile navigation, reachable add/care actions, keyboard-accessible sheets, and offline PWA assets.
 - New offline app versions activate automatically; refresh to load the latest UI without clearing saved progress.

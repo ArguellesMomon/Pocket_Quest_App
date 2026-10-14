@@ -1,13 +1,18 @@
-import { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { useEffect, useState } from 'react';
+import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { useGame } from '../context';
 import { ScreenHeading, Segments } from '../components/PhoneUI';
 import Icon from '../components/Icon';
 import Dialog from '../components/Dialog';
+import { feedback } from '../lib/feedback';
 export default function Preferences() {
-  const { state, user, act, busy, pendingAction, signOut, toast, openHelp, retry, syncing } =
+  const { state, user, act, busy, pendingAction, signOut, toast, openHelp, retry, syncing, audio } =
     useGame();
-  const [tab, setTab] = useState('look'),
+  const [params, setParams] = useSearchParams();
+  const category = params.get('tab');
+  const [tab, setTab] = useState(
+      ['look', 'sounds', 'profile', 'account'].includes(category) ? category : 'look',
+    ),
     [logout, setLogout] = useState(false),
     [signingOut, setSigningOut] = useState(false);
   const [profile, setProfile] = useState({
@@ -16,6 +21,10 @@ export default function Preferences() {
     timezone: state.timezone,
   });
   const navigate = useNavigate();
+  useEffect(
+    () => setTab(['look', 'sounds', 'profile', 'account'].includes(category) ? category : 'look'),
+    [category],
+  );
   const preference = (key, value) =>
     act({ type: 'settings.update', settings: { ...state.settings, [key]: value } });
   const save = (key, value) => setProfile((p) => ({ ...p, [key]: value }));
@@ -49,9 +58,13 @@ export default function Preferences() {
       <Segments
         label="Settings category"
         value={tab}
-        onChange={setTab}
+        onChange={(value) => {
+          setTab(value);
+          setParams(value === 'look' ? {} : { tab: value }, { replace: true });
+        }}
         options={[
-          { id: 'look', name: 'Appearance', icon: 'sun' },
+          { id: 'look', name: 'Look', icon: 'sun' },
+          { id: 'sounds', name: 'Sounds', icon: 'volume' },
           { id: 'profile', name: 'Profile', icon: 'paw' },
           { id: 'account', name: 'Account', icon: 'cloud' },
         ]}
@@ -74,10 +87,7 @@ export default function Preferences() {
                 </button>
               ))}
             </div>
-            {[
-              { key: 'motion', name: 'Animations', icon: 'sparkles' },
-              { key: 'sound', name: 'Sounds', icon: 'volume' },
-            ].map((s) => (
+            {[{ key: 'motion', name: 'Animations', icon: 'sparkles' }].map((s) => (
               <div className="setting-row" key={s.key}>
                 <strong>
                   <Icon name={s.icon} size={18} />
@@ -114,6 +124,107 @@ export default function Preferences() {
               </select>
             </div>
           </>
+        ) : tab === 'sounds' ? (
+          <div className="sound-settings">
+            <div className="background-music-card">
+              <div className="music-cover" aria-hidden="true">
+                <img src="/backgrounds/daydream.webp" alt="" />
+                <Icon name="volume" size={22} />
+              </div>
+              <div className="music-title">
+                <strong>Pocket Quest</strong>
+                <small>Background music</small>
+              </div>
+              <button
+                role="switch"
+                aria-label="Background music"
+                aria-checked={audio.music}
+                className={`toggle ${audio.music ? 'on' : ''}`}
+                onClick={() => audio.update({ music: !audio.music })}
+              >
+                <span />
+              </button>
+              <div className="music-volume">
+                <label htmlFor="music-volume">
+                  Volume <output htmlFor="music-volume">{audio.volume}%</output>
+                </label>
+                <input
+                  id="music-volume"
+                  aria-label="Music volume"
+                  type="range"
+                  min="0"
+                  max="30"
+                  step="1"
+                  value={audio.volume}
+                  onChange={(event) => audio.update({ volume: Number(event.target.value) })}
+                />
+                <div className="music-playback-state">
+                  <small role="status">
+                    {!audio.music
+                      ? 'Off · starts softly'
+                      : audio.status === 'playing'
+                        ? 'Playing softly'
+                        : audio.status === 'loading'
+                          ? 'Starting…'
+                          : audio.status === 'error'
+                            ? 'Music could not load. Try again.'
+                            : 'Tap play to start'}
+                  </small>
+                  {audio.music && ['off', 'waiting', 'error'].includes(audio.status) && (
+                    <button
+                      className="icon-button"
+                      aria-label="Play background music"
+                      onClick={audio.play}
+                    >
+                      <Icon name="play" size={17} />
+                    </button>
+                  )}
+                </div>
+              </div>
+            </div>
+            <div className="setting-row">
+              <strong>
+                <Icon name="sparkles" size={18} />
+                Sound effects
+              </strong>
+              <button
+                role="switch"
+                aria-label="Sound effects"
+                aria-checked={state.settings.sound}
+                className={`toggle ${state.settings.sound ? 'on' : ''}`}
+                disabled={busy}
+                onClick={() => {
+                  const sound = !state.settings.sound;
+                  if (sound) feedback('care', { sound: true });
+                  preference('sound', sound);
+                }}
+              >
+                <span />
+              </button>
+            </div>
+            <div className="setting-row">
+              <strong>
+                <Icon name="zap" size={18} />
+                Haptics
+              </strong>
+              <button
+                role="switch"
+                aria-label="Haptics"
+                aria-checked={audio.haptics}
+                className={`toggle ${audio.haptics ? 'on' : ''}`}
+                onClick={() => {
+                  const haptics = !audio.haptics;
+                  audio.update({ haptics });
+                  if (haptics) feedback('tap', { haptics: true });
+                }}
+              >
+                <span />
+              </button>
+            </div>
+            <small className="sound-settings-note">
+              Music and haptics are saved on this device. Haptics work on supported devices.
+            </small>
+          </div>
         ) : tab === 'profile' ? (
           <form
             className="profile-form"

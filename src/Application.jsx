@@ -11,6 +11,8 @@ import {
 import { GameContext, useGame } from './context';
 import { useGameState } from './hooks/useGameState';
 import { useKeyboardViewport } from './hooks/useKeyboardViewport';
+import { useAudioPreferences } from './hooks/useAudioPreferences';
+import ProfileMenu from './components/ProfileMenu';
 import { completed, levelFor, streakFor } from '../shared/game';
 import Icon from './components/Icon';
 import { QuestEditor, HelpDialog } from './components/GameUI';
@@ -138,9 +140,7 @@ function Shell({ children, onAdd, onHelp }) {
             </span>
             <ThemeButton />
             <LinkToSettings />
-            <button className="avatar topbar-avatar" onClick={onHelp} aria-label="Open field guide">
-              {state.name.slice(0, 1).toUpperCase()}
-            </button>
+            <ProfileMenu />
           </div>
         </header>
         {error && !pendingAction && (
@@ -185,6 +185,11 @@ function Adventure() {
     [help, setHelp] = useState(false);
   const location = useLocation(),
     navigate = useNavigate();
+  const audio = useAudioPreferences(
+    game.user?.id || 'guest',
+    Boolean(game.state) &&
+      !['/login', '/welcome', '/forgot-password', '/reset-password'].includes(location.pathname),
+  );
   useEffect(() => {
     const id = setTimeout(preloadCompanions, 300);
     return () => clearTimeout(id);
@@ -214,6 +219,7 @@ function Adventure() {
   }, [location.pathname]);
   const context = {
     ...game,
+    audio,
     editQuest: (task) => setEditor({ task }),
     addQuest: () => setEditor({ task: null }),
     openHelp: () => setHelp(true),

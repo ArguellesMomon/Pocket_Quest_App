@@ -246,20 +246,21 @@ test('sound and haptics respect their controls, persist, and reduced motion remo
   context,
 }) => {
   await adventure(page, context);
-  await page.getByRole('button', { name: 'Sound and touch feedback' }).click();
-  await expect(page.getByRole('switch', { name: 'Sounds' })).toHaveAttribute(
+  await expect(page.getByRole('button', { name: 'Sound and touch feedback' })).toHaveCount(0);
+  await page.goto('/settings?tab=sounds');
+  await expect(page.getByRole('switch', { name: 'Sound effects' })).toHaveAttribute(
     'aria-checked',
     'false',
   );
-  await page.getByRole('switch', { name: 'Sounds' }).click();
+  await page.getByRole('switch', { name: 'Sound effects' }).click();
   await expect.poll(() => page.evaluate(() => window.soundCues.length)).toBeGreaterThan(0);
-  await page.getByRole('switch', { name: 'Sounds' }).click();
+  await page.getByRole('switch', { name: 'Sound effects' }).click();
   await page.getByRole('switch', { name: 'Haptics' }).click();
   await expect(page.getByRole('switch', { name: 'Haptics' })).toHaveAttribute(
     'aria-checked',
     'false',
   );
-  await page.getByRole('button', { name: 'Close dialog' }).click();
+  await page.getByRole('link', { name: 'Today', exact: true }).click();
   const before = await page.evaluate(() => ({
     touch: window.touchCues.length,
     sound: window.soundCues.length,
@@ -269,8 +270,8 @@ test('sound and haptics respect their controls, persist, and reduced motion remo
     await page.evaluate(() => ({ touch: window.touchCues.length, sound: window.soundCues.length })),
   ).toEqual(before);
   await page.reload();
-  await page.getByRole('button', { name: 'Sound and touch feedback' }).click();
-  await expect(page.getByRole('switch', { name: 'Sounds' })).toHaveAttribute(
+  await page.goto('/settings?tab=sounds');
+  await expect(page.getByRole('switch', { name: 'Sound effects' })).toHaveAttribute(
     'aria-checked',
     'false',
   );
@@ -278,7 +279,7 @@ test('sound and haptics respect their controls, persist, and reduced motion remo
     'aria-checked',
     'false',
   );
-  await page.getByRole('button', { name: 'Close dialog' }).click();
+  await page.getByRole('link', { name: 'Today', exact: true }).click();
   await page.emulateMedia({ reducedMotion: 'reduce' });
   await finish(page);
   await expect(page.getByRole('region', { name: 'Quest reward' })).toHaveCSS(
