@@ -4,7 +4,7 @@ import { useGame } from '../context';
 import Icon from './Icon';
 
 export default function ProfileMenu() {
-  const { state, user, busy, pendingAction, signOut, toast } = useGame();
+  const { state, user, busy, pendingAction, signOut, toast, admin } = useGame();
   const [open, setOpen] = useState(false),
     [leaving, setLeaving] = useState(false);
   const root = useRef(null),
@@ -74,6 +74,12 @@ export default function ProfileMenu() {
             <Icon name="settings" size={17} />
             Profile & settings
           </Link>
+          {admin && (
+            <Link role="menuitem" to="/admin" onClick={() => setOpen(false)}>
+              <Icon name="filter" size={17} />
+              Test controls
+            </Link>
+          )}
           {user ? (
             <button
               role="menuitem"

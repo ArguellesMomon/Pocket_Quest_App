@@ -1,7 +1,13 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { applyAction, createGame, dayKey, upgradeGame } from '../../shared/game.js';
 import { createSnapshot, enqueue, projectedState, reconcile } from '../../shared/outbox.js';
-import { auth, clearTokenCache, cloudConfigured, cloudRequest } from '../lib/cloud.js';
+import {
+  auth,
+  clearTokenCache,
+  cloudConfigured,
+  cloudRequest,
+  accountRequest,
+} from '../lib/cloud.js';
 import { retryableSyncError, retryDelay } from '../lib/sync-policy.js';
 const KEY = 'pocketquest-guest-v1',
   ACCOUNT = 'pocketquest-account-v2';
@@ -70,6 +76,9 @@ export function useGameState() {
   if (!initial.current) initial.current = boot();
   const [state, setState] = useState(initial.current.state),
     [user, setUser] = useState(initial.current.user);
+  const [admin, setAdmin] = useState(false);
+  const [adminSaving, setAdminSaving] = useState(false);
+  const adminLock = useRef(false);
   const [ready, setReady] = useState(Boolean(initial.current.snapshot) || !cloudConfigured);
   const [busy, setBusy] = useState(false),
     [syncing, setSyncing] = useState(false);
@@ -120,6 +129,7 @@ export function useGameState() {
   const restore = useCallback(async () => {
     const epoch = ++restoreEpoch.current;
     verifiedOwner.current = null;
+    setAdmin(false);
     setError('');
     if (!auth || !navigator.onLine) {
       setReady(true);
@@ -173,8 +183,11 @@ export function useGameState() {
           else if (!current.queue.length) storeSnapshot(owner, reconcile(current, result).snapshot);
         });
         sessionStorage.removeItem(`pocketquest-pending:${owner}`);
+        const access = await cloudRequest(undefined, false, owner);
+        if (epoch === restoreEpoch.current) setAdmin(access.admin === true);
       } else if (!cached?.queue.length && !cached?.refresh) {
         const result = await cloudRequest(undefined, false, owner);
+        if (epoch === restoreEpoch.current) setAdmin(result.admin === true);
         await withLock(cloudKey(owner), () => {
           const current = readCloud(owner);
           // A command may have started during GET. Its persisted pre-action base
@@ -183,6 +196,9 @@ export function useGameState() {
           else if (!current.queue.length && !current.refresh)
             storeSnapshot(owner, reconcile(current, result).snapshot);
         });
+      } else {
+        const access = await cloudRequest(undefined, false, owner);
+        if (epoch === restoreEpoch.current) setAdmin(access.admin === true);
       }
     } catch (e) {
       if (epoch === restoreEpoch.current) {
@@ -294,6 +310,10 @@ export function useGameState() {
   const act = useCallback(
     async (input, { quiet = false, sound = true } = {}) => {
       if (!input || !stateRef.current) return false;
+      if (adminLock.current) {
+        toast('Let the test changes finish saving first.', 'error');
+        return false;
+      }
       const action = { ...input, id: crypto.randomUUID() };
       try {
         let message, next;
@@ -359,6 +379,7 @@ export function useGameState() {
     };
   }, [pendingAction, syncing, user, ready, revision, error, drain]);
   const signOut = useCallback(async () => {
+    if (adminLock.current) throw new Error('Let the test changes finish saving first.');
     const owner = userRef.current?.id;
     if (owner) {
       const snapshot = readCloud(owner);
@@ -373,16 +394,56 @@ export function useGameState() {
     sessionStorage.removeItem(ACCOUNT);
     userRef.current = null;
     setUser(null);
+    setAdmin(false);
     mode.current = 'guest';
     snapshotRef.current = null;
     setPendingAction(false);
     accept(readGuest());
   }, [accept]);
+  const updateTestProgress = useCallback(
+    async (request) => {
+      const owner = userRef.current?.id;
+      if (!owner || adminLock.current)
+        throw Object.assign(new Error('Test controls are not available right now.'), {
+          status: 409,
+        });
+      adminLock.current = true;
+      setAdminSaving(true);
+      try {
+        return await withLock(`${cloudKey(owner)}:network`, async () => {
+          await withLock(cloudKey(owner), () => {
+            const snapshot = readCloud(owner);
+            if (!snapshot || snapshot.queue.length || snapshot.refresh)
+              throw Object.assign(
+                new Error('Let your latest changes finish saving before editing test values.'),
+                { status: 409 },
+              );
+          });
+          const result = await accountRequest(
+            '/api/admin',
+            { method: 'POST', body: request },
+            owner,
+          );
+          await withLock(cloudKey(owner), () => {
+            if (userRef.current?.id !== owner) return;
+            const snapshot = readCloud(owner);
+            if (snapshot) storeSnapshot(owner, reconcile(snapshot, result).snapshot);
+          });
+          return result;
+        });
+      } finally {
+        adminLock.current = false;
+        setAdminSaving(false);
+      }
+    },
+    [storeSnapshot],
+  );
   return {
     state,
     user,
+    admin,
     ready,
-    busy,
+    busy: busy || adminSaving,
     syncing,
     error,
     now,
@@ -393,6 +454,7 @@ export function useGameState() {
     startGuest,
     restore,
     signOut,
+    updateTestProgress,
     pendingAction,
     retry: () => (verifiedOwner.current === userRef.current?.id ? drain() : restore()),
     today: state ? dayKey(now, state.timezone) : '',

@@ -1,6 +1,7 @@
 import { withOwner } from '../server/database.js';
 import { loadGame, mutateGame } from '../server/game-store.js';
 import { requireIdentity } from '../server/identity.js';
+import { hasAdminAccess } from '../server/admin-store.js';
 export default async function handler(req, res) {
   res.setHeader('Cache-Control', 'no-store');
   res.setHeader('X-Content-Type-Options', 'nosniff');
@@ -18,7 +19,12 @@ export default async function handler(req, res) {
   }
   try {
     if (req.method === 'GET')
-      return res.status(200).json(await withOwner(owner, (c) => loadGame(c, owner, ownerName)));
+      return res
+        .status(200)
+        .json({
+          ...(await withOwner(owner, (c) => loadGame(c, owner, ownerName))),
+          admin: await hasAdminAccess(owner),
+        });
     const raw = typeof req.body === 'string' ? req.body : JSON.stringify(req.body || {});
     if (Buffer.byteLength(raw) > 12000)
       return res.status(413).json({ error: 'This request is too large.' });

@@ -6,8 +6,20 @@ import Icon from '../components/Icon';
 import Dialog from '../components/Dialog';
 import { feedback } from '../lib/feedback';
 export default function Preferences() {
-  const { state, user, act, busy, pendingAction, signOut, toast, openHelp, retry, syncing, audio } =
-    useGame();
+  const {
+    state,
+    user,
+    act,
+    busy,
+    pendingAction,
+    signOut,
+    toast,
+    openHelp,
+    retry,
+    syncing,
+    audio,
+    admin,
+  } = useGame();
   const [params, setParams] = useSearchParams();
   const category = params.get('tab');
   const [tab, setTab] = useState(
@@ -302,6 +314,12 @@ export default function Preferences() {
               <Link className="button primary full-width" to="/login">
                 Sign in
                 <Icon name="arrow" size={17} />
+              </Link>
+            )}
+            {admin && (
+              <Link className="button primary full-width" to="/admin">
+                <Icon name="filter" size={17} />
+                Test controls
               </Link>
             )}
             <button className="button secondary full-width" onClick={exportData}>

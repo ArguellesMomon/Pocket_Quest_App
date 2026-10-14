@@ -37,7 +37,7 @@ Old scarf and crown purchases become Peach beach and Cloud nine backgrounds at n
 
 ## Neon setup
 
-This checkout is configured for the dedicated **Pocket-Quest** project in AWS Singapore. The schema is [neon/001_game.sql](neon/001_game.sql) plus [neon/002_chat.sql](neon/002_chat.sql). `.neon` records the project context; credentials are in ignored `.env.local`.
+This checkout is configured for the dedicated **Pocket-Quest** project in AWS Singapore. Numbered migrations in `neon/` cover game progress, chat, and test admin controls. `.neon` records the project context; credentials are in ignored `.env.local`.
 
 For another environment, copy `.env.example` to `.env.local` and fill in:
 
@@ -58,6 +58,14 @@ npm run db:migrate
 Migrations require a direct connection. Browser actions go through `/api/game`; the server verifies identity and applies the shared game rules in a locked transaction using an owner-restricted database role. The app does not use a browser-facing Data API.
 
 The user chose a fresh Neon start. No existing Supabase accounts or progress were imported, and the old Supabase cloud project was not deleted.
+
+## Test admin
+
+Provision an account using `npm run db:migrate`, then set `POCKET_QUEST_ADMIN_EMAIL` and `POCKET_QUEST_ADMIN_PASSWORD` in your process environment and run `npm run admin:provision`. The script creates a managed Neon account if needed, verifies its password, and grants a server-owned membership. It never embeds a password in the app or changes an existing password.
+
+After signing in, open **Profile menu → Test controls** (also in Settings → Account). Edit this account's coins, points/XP, companion, energy, and happiness, or tap a mood preset. Changes save to Neon and appear immediately throughout the app. XP determines level. The test panel preserves quests, completions, inventory, settings, and chat histories. Stat limits match the game's 20–100% range.
+
+Only provisioned user IDs can use `/api/admin`; email addresses, client flags, and request target IDs never grant access. Admin edits affect only the signed-in test account, use locked version checks and idempotent saves, and record before/after values. Ordinary game actions cannot modify admin membership. This is a test account, not a user-management console; use a private test environment for shared test credentials.
 
 ## Companion chat
 

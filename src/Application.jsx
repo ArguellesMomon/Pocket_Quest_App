@@ -23,6 +23,7 @@ import Habitat from './pages/Habitat';
 import Market from './pages/Market';
 import Journey from './pages/Journey';
 import Preferences from './pages/Preferences';
+import Admin from './pages/Admin';
 import { preloadCompanions } from './lib/sprite-preload';
 const destinations = [
   { path: '/dashboard', label: 'Today', icon: 'sun' },
@@ -288,6 +289,7 @@ function Adventure() {
         <Route path="/market" element={protectedPage(<Market />)} />
         <Route path="/journey" element={protectedPage(<Journey />)} />
         <Route path="/settings" element={protectedPage(<Preferences />)} />
+        <Route path="/admin" element={protectedPage(<Admin />)} />
         <Route path="/pet-room" element={<Navigate to="/habitat" replace />} />
         <Route path="/onboarding" element={<Navigate to="/welcome" replace />} />
         <Route path="/objectives/new" element={<Navigate to="/quests?new=1" replace />} />
