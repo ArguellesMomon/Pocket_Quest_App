@@ -53,8 +53,18 @@ import {
   Gift,
   SlidersHorizontal,
   MessageCircle,
+  ListTodo,
+  Eye,
+  EyeOff,
+  Mail,
+  Smile,
 } from 'lucide-react';
 const icons = {
+  tasks: ListTodo,
+  eye: Eye,
+  'eye-off': EyeOff,
+  mail: Mail,
+  smile: Smile,
   download: ArrowDownToLine,
   back: ArrowLeft,
   arrow: ArrowRight,

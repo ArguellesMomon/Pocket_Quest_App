@@ -25,9 +25,9 @@ export default defineConfig(({ mode }) => ({
         name: 'Pocket Quest',
         short_name: 'PocketQuest',
         description:
-          'Small steps, big adventures. Complete quests and grow a little world with your companion.',
-        theme_color: '#7550b7',
-        background_color: '#f7f3fc',
+          'Your to-do list, with a friend. Plan tasks, celebrate little wins, and grow together.',
+        theme_color: '#7053aa',
+        background_color: '#f6f5f0',
         display: 'standalone',
         start_url: '/',
         icons: [

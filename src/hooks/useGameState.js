@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { applyAction, createGame, dayKey, upgradeGame } from '../../shared/game.js';
+import { dayKey, upgradeGame } from '../../shared/game.js';
 import { createSnapshot, enqueue, projectedState, reconcile } from '../../shared/outbox.js';
 import {
   auth,
@@ -9,8 +9,7 @@ import {
   accountRequest,
 } from '../lib/cloud.js';
 import { retryableSyncError, retryDelay } from '../lib/sync-policy.js';
-const KEY = 'pocketquest-guest-v1',
-  ACCOUNT = 'pocketquest-account-v2';
+const ACCOUNT = 'pocketquest-account-v2';
 const cloudKey = (owner) => `pocketquest-cloud-v2:${owner}`;
 function readJSON(storage, key) {
   try {
@@ -18,22 +17,6 @@ function readJSON(storage, key) {
   } catch {
     return null;
   }
-}
-function readGuest() {
-  const value = readJSON(localStorage, KEY);
-  return value?.schema === 1 &&
-    Array.isArray(value.tasks) &&
-    Array.isArray(value.completions) &&
-    Array.isArray(value.activity) &&
-    Array.isArray(value.bonusDays) &&
-    Array.isArray(value.equipped?.decor) &&
-    value.inventory &&
-    Number.isFinite(value.coins) &&
-    Number.isFinite(value.xp) &&
-    value.pet &&
-    value.settings
-    ? upgradeGame(value)
-    : null;
 }
 function readCloud(owner) {
   const value = readJSON(localStorage, cloudKey(owner));
@@ -53,7 +36,7 @@ function boot() {
   const snapshot = user?.id ? readCloud(user.id) : null;
   return snapshot
     ? { user, state: projectedState(snapshot), snapshot }
-    : { user: null, state: readGuest(), snapshot: null };
+    : { user: null, state: null, snapshot: null };
 }
 function victorySound() {
   try {
@@ -80,8 +63,7 @@ export function useGameState() {
   const [adminSaving, setAdminSaving] = useState(false);
   const adminLock = useRef(false);
   const [ready, setReady] = useState(Boolean(initial.current.snapshot) || !cloudConfigured);
-  const [busy, setBusy] = useState(false),
-    [syncing, setSyncing] = useState(false);
+  const [syncing, setSyncing] = useState(false);
   const [pendingAction, setPendingAction] = useState(
     Boolean(initial.current.snapshot?.queue.length || initial.current.snapshot?.refresh),
   );
@@ -92,9 +74,7 @@ export function useGameState() {
   const stateRef = useRef(state),
     userRef = useRef(user),
     snapshotRef = useRef(initial.current.snapshot);
-  const mode = useRef(user ? 'cloud' : 'guest'),
-    flight = useRef(false),
-    guestLock = useRef(false),
+  const flight = useRef(false),
     timer = useRef(null),
     restoreRef = useRef(null);
   const restoreEpoch = useRef(0);
@@ -151,15 +131,13 @@ export function useGameState() {
       verifiedOwner.current = identity?.id || null;
       setUser(identity);
       if (!identity) {
-        mode.current = 'guest';
         snapshotRef.current = null;
         sessionStorage.removeItem(ACCOUNT);
         setPendingAction(false);
-        accept(readGuest());
+        accept(null);
         return;
       }
       const owner = identity.id;
-      mode.current = 'cloud';
       sessionStorage.setItem(
         ACCOUNT,
         JSON.stringify({ id: owner, name: identity.name, email: identity.email }),
@@ -228,8 +206,7 @@ export function useGameState() {
   }, []);
   useEffect(() => {
     const listener = (event) => {
-      if (mode.current === 'guest' && event.key === KEY) accept(readGuest());
-      else if (userRef.current && event.key === cloudKey(userRef.current.id)) {
+      if (userRef.current && event.key === cloudKey(userRef.current.id)) {
         const snapshot = readCloud(userRef.current.id);
         if (snapshot) publish(userRef.current.id, snapshot);
       }
@@ -237,17 +214,6 @@ export function useGameState() {
     window.addEventListener('storage', listener);
     return () => window.removeEventListener('storage', listener);
   }, [accept, publish]);
-  const startGuest = useCallback(
-    (species) => {
-      if (userRef.current) return;
-      const next = readGuest() || createGame(species);
-      localStorage.setItem(KEY, JSON.stringify(next));
-      mode.current = 'guest';
-      accept(next);
-      setError('');
-    },
-    [accept],
-  );
   const drain = useCallback(async () => {
     const owner = userRef.current?.id;
     if (!owner || verifiedOwner.current !== owner || flight.current || !navigator.onLine)
@@ -309,7 +275,7 @@ export function useGameState() {
   }, [storeSnapshot, publish, toast]);
   const act = useCallback(
     async (input, { quiet = false, sound = true } = {}) => {
-      if (!input || !stateRef.current) return false;
+      if (!input || !stateRef.current || !userRef.current) return false;
       if (adminLock.current) {
         toast('Let the test changes finish saving first.', 'error');
         return false;
@@ -327,22 +293,6 @@ export function useGameState() {
             next = stateRef.current;
             message = queued.message;
           });
-        } else {
-          if (guestLock.current) return false;
-          guestLock.current = true;
-          setBusy(true);
-          try {
-            await withLock(KEY, () => {
-              const result = applyAction(readGuest() || stateRef.current, action);
-              localStorage.setItem(KEY, JSON.stringify(result.state));
-              accept(result.state);
-              next = result.state;
-              message = result.message;
-            });
-          } finally {
-            guestLock.current = false;
-            setBusy(false);
-          }
         }
         if (!quiet && !['settings.update', 'pet.switch', 'background.reset'].includes(action.type))
           toast(message);
@@ -395,10 +345,9 @@ export function useGameState() {
     userRef.current = null;
     setUser(null);
     setAdmin(false);
-    mode.current = 'guest';
     snapshotRef.current = null;
     setPendingAction(false);
-    accept(readGuest());
+    accept(null);
   }, [accept]);
   const updateTestProgress = useCallback(
     async (request) => {
@@ -443,7 +392,7 @@ export function useGameState() {
     user,
     admin,
     ready,
-    busy: busy || adminSaving,
+    busy: adminSaving,
     syncing,
     error,
     now,
@@ -451,7 +400,6 @@ export function useGameState() {
     notice,
     dismissNotice: () => setNotice(null),
     act,
-    startGuest,
     restore,
     signOut,
     updateTestProgress,

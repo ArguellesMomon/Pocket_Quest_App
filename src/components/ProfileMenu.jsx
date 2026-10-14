@@ -68,7 +68,7 @@ export default function ProfileMenu() {
         <div ref={items} className="profile-menu-panel" role="menu" aria-label="Account actions">
           <div className="profile-menu-name">
             <strong>{state.name}</strong>
-            <small>{user ? 'Signed in' : 'Guest adventure'}</small>
+            <small>Signed in</small>
           </div>
           <Link role="menuitem" to="/settings?tab=profile" onClick={() => setOpen(false)}>
             <Icon name="settings" size={17} />

@@ -1,11 +1,10 @@
 import { test, expect } from '@playwright/test';
 import { createGame } from '../../shared/game.js';
+import { mockAccount } from './account-fixture.js';
 
-async function guest(page, context) {
-  await context.route('**/api/auth/get-session', (route) => route.fulfill({ json: null }));
+async function account(page, context) {
+  await mockAccount(page, context, { state: createGame('samo') });
   await page.addInitScript((state) => {
-    if (!localStorage.getItem('pocketquest-guest-v1'))
-      localStorage.setItem('pocketquest-guest-v1', JSON.stringify(state));
     window.musicElements = [];
     window.musicGains = [];
     const NativeAudio = window.Audio,
@@ -29,7 +28,7 @@ test('provided music starts softly, loops, persists and keeps playing across pag
   context,
 }) => {
   await page.setViewportSize({ width: 390, height: 844 });
-  await guest(page, context);
+  await account(page, context);
   await expect(page.getByRole('switch', { name: 'Background music' })).toHaveAttribute(
     'aria-checked',
     'false',
@@ -71,7 +70,7 @@ test('music pauses when hidden, resumes when visible and handles blocked playbac
   page,
   context,
 }) => {
-  await guest(page, context);
+  await account(page, context);
   await page.evaluate(() => {
     window.testHidden = false;
     Object.defineProperty(document, 'hidden', { configurable: true, get: () => window.testHidden });
@@ -103,7 +102,7 @@ test('an unavailable music file can be retried without breaking the app', async 
   page,
   context,
 }) => {
-  await guest(page, context);
+  await account(page, context);
   const pattern = '**/audio/pocket-quest-background.mp3';
   await context.route(pattern, (route) => route.fulfill({ status: 500, body: 'Unavailable' }));
   await page.getByRole('switch', { name: 'Background music' }).click();
@@ -113,12 +112,12 @@ test('an unavailable music file can be retried without breaking the app', async 
   await expect(page.getByText('Playing softly', { exact: true })).toBeVisible();
 });
 
-test('sound settings and the guest profile menu fit phones in dark mode', async ({
+test('sound settings and the account profile menu fit phones in dark mode', async ({
   page,
   context,
 }) => {
-  await page.addInitScript(() => localStorage.setItem('pocketquest-touch:guest', 'off'));
-  await guest(page, context);
+  await page.addInitScript(() => localStorage.setItem('pocketquest-touch:design-qa', 'off'));
+  await account(page, context);
   await expect(page.getByRole('switch', { name: 'Haptics' })).toHaveAttribute(
     'aria-checked',
     'false',
@@ -142,7 +141,7 @@ test('sound settings and the guest profile menu fit phones in dark mode', async 
   });
   await page.getByRole('button', { name: 'Account menu' }).click();
   await expect(page.getByRole('menu', { name: 'Account actions' })).toBeVisible();
-  await expect(page.getByRole('menuitem', { name: 'Sign in', exact: true })).toBeVisible();
+  await expect(page.getByRole('menuitem', { name: 'Sign out', exact: true })).toBeVisible();
   await expect(page.getByRole('dialog')).toHaveCount(0);
   await page.screenshot({ path: 'docs/previews/profile-menu-mobile.png', animations: 'disabled' });
   await page.keyboard.press('Escape');
@@ -173,5 +172,5 @@ test('the account menu signs out without opening the tutorial', async ({ page, c
   await expect(page.getByRole('dialog')).toHaveCount(0);
   await page.getByRole('menuitem', { name: 'Sign out', exact: true }).click();
   await expect.poll(() => signedOut).toBe(true);
-  await expect(page.getByRole('button', { name: /Let.s play/ })).toBeVisible();
+  await expect(page.getByRole('link', { name: 'Get started', exact: true })).toBeVisible();
 });

@@ -24,7 +24,7 @@ export default function Journey() {
   const max = Math.max(3, ...days.map((d) => d.count));
   return (
     <div className="compact-page stats-page">
-      <ScreenHeading title="Stats">
+      <ScreenHeading title="Stats" subtitle="Every small step counts.">
         <span className="level-chip">
           <Icon name="star" size={15} />
           Lv. {levelFor(state.xp)}
@@ -32,7 +32,7 @@ export default function Journey() {
       </ScreenHeading>
       <div className="mini-stats">
         {[
-          { icon: 'flag', value: metrics.quests, label: 'Quests' },
+          { icon: 'done', value: metrics.quests, label: 'Tasks' },
           { icon: 'flame', value: metrics.streak, label: 'Streak' },
           { icon: 'star', value: state.xp, label: 'XP' },
           { icon: 'heart', value: state.careCount, label: 'Care' },
@@ -58,7 +58,7 @@ export default function Journey() {
             <div className={`chart-day ${d.key === today ? 'today' : ''}`} key={d.key}>
               <span className="chart-count">{d.count}</span>
               <div className="chart-track">
-                <div style={{ height: `${Math.max(3, (d.count / max) * 100)}%` }} />
+                <div style={{ height: `${(d.count / max) * 100}%` }} />
               </div>
               <span>{d.label}</span>
             </div>

@@ -19,7 +19,7 @@ export default function Habitat() {
     [name, setName] = useState(state.pet.name);
   return (
     <div className="compact-page pets-page">
-      <ScreenHeading title="Pets">
+      <ScreenHeading title="Pets" subtitle="A little care goes a long way.">
         <button
           className="button secondary companion-chat-open"
           aria-label="Talk to your companion"
@@ -39,7 +39,7 @@ export default function Habitat() {
         </button>
       </ScreenHeading>
       <PetScene large />
-      <QuickCare />
+      <QuickCare bag={false} />
       <Segments
         label="Pet tools"
         value={tab}

@@ -10,6 +10,7 @@ import '@fontsource/space-grotesk/latin-600.css';
 import '@fontsource/space-grotesk/latin-700.css';
 import '@fontsource/silkscreen/latin-400.css';
 import './styles/phone.css';
+import './styles/refresh.css';
 
 ReactDOM.createRoot(document.getElementById('root')).render(
   <React.StrictMode>

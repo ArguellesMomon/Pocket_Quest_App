@@ -292,8 +292,8 @@ export default function Preferences() {
         ) : (
           <div className="account-settings">
             <Icon name="cloud" size={35} />
-            <h2>{user ? 'Cloud adventure' : 'Guest adventure'}</h2>
-            <p>{user ? user.email : 'Saved on this device.'}</p>
+            <h2>Your account</h2>
+            <p>{user.email}</p>
             {user && (
               <div className="account-sync-status" role="status">
                 <Icon name="cloud" size={15} />
@@ -309,12 +309,6 @@ export default function Preferences() {
                   </button>
                 )}
               </div>
-            )}
-            {!user && (
-              <Link className="button primary full-width" to="/login">
-                Sign in
-                <Icon name="arrow" size={17} />
-              </Link>
             )}
             {admin && (
               <Link className="button primary full-width" to="/admin">

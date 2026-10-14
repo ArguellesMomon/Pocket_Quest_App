@@ -1,0 +1,788 @@
+/* Shared visual rhythm: soft paper, lilac actions, mint for completed work. */
+.panel {
+  box-shadow: 0 4px 16px #22243c04;
+}
+.button {
+  border-radius: 14px;
+}
+.button.primary {
+  box-shadow: 0 4px 10px #7053aa16;
+}
+.button.secondary {
+  background: var(--surface-2);
+  border-color: transparent;
+}
+.segments {
+  background: var(--surface-2);
+  border: 0;
+  border-radius: 15px;
+  padding: 4px;
+}
+.segments > button {
+  border-radius: 11px;
+  min-height: 42px;
+}
+.segments > button.active {
+  background: var(--surface);
+  box-shadow: 0 2px 6px #2424380c;
+}
+.screen-heading > div:first-child {
+  display: grid;
+  align-items: start;
+  gap: 3px;
+}
+.screen-heading h1 {
+  letter-spacing: -0.045em;
+}
+.icon-button {
+  border-radius: 12px;
+}
+.topbar {
+  background: var(--bg);
+  border-color: transparent;
+}
+.brand-symbol {
+  border-radius: 13px;
+  transform: rotate(-5deg);
+}
+.avatar {
+  background: var(--mint-bg);
+  color: var(--mint);
+}
+.profile-menu-panel {
+  border-radius: 20px;
+  box-shadow: 0 12px 32px #11152624;
+}
+.nav-link.active {
+  border-radius: 14px;
+}
+.nav-link.active svg,
+.mobile-nav > a.active svg {
+  stroke-width: 2.2;
+}
+.compact-list-head {
+  color: var(--muted);
+}
+.category-symbol.work {
+  color: var(--accent);
+  background: var(--accent-soft);
+}
+.category-symbol.wellbeing {
+  color: var(--mint);
+  background: var(--mint-bg);
+}
+.category-symbol.learning {
+  color: var(--gold);
+  background: var(--gold-bg);
+}
+.category-symbol.creative {
+  color: var(--pink);
+  background: var(--pink-bg);
+}
+.quest-check {
+  border-color: var(--muted);
+  border-radius: 50%;
+}
+.is-done .quest-check {
+  background: var(--mint);
+  border-color: var(--mint);
+}
+.quest-row.is-done {
+  background: color-mix(in srgb, var(--mint-bg) 25%, var(--surface));
+}
+.quest-reward {
+  background: var(--gold-bg);
+  border-radius: 9px;
+  padding: 5px 6px;
+}
+.quest-row {
+  padding: 14px;
+  gap: 10px;
+}
+.quest-journal {
+  flex: 0 1 auto;
+}
+.quests-page .suggestion-shortcut {
+  margin-top: auto;
+}
+.quest-title {
+  min-height: 25px;
+}
+.quest-options {
+  min-height: 44px;
+}
+.due-chip.overdue {
+  color: var(--orange);
+}
+.due-chip.today {
+  color: var(--mint);
+}
+.task-filter-chip {
+  display: flex;
+  gap: 7px;
+  align-items: center;
+  color: var(--accent);
+  font-size: 11px;
+}
+.task-filter-chip button {
+  background: var(--accent-soft);
+  border-radius: 9px;
+  padding: 7px 10px;
+}
+.suggestion-shortcut {
+  background: var(--mint-bg);
+  color: var(--mint);
+  border: 0;
+  min-height: 44px;
+}
+.pet-scene {
+  border-radius: 24px;
+}
+.pet-meters {
+  background: var(--surface);
+}
+.quick-care > button {
+  background: var(--surface);
+  border-radius: 16px;
+}
+.quick-care > button:nth-child(1) {
+  background: var(--pink-bg);
+}
+.quick-care > button:nth-child(2) {
+  background: var(--gold-bg);
+}
+.mood-pill {
+  border-radius: 10px;
+}
+.item-tile {
+  border-radius: 20px;
+}
+.item-preview {
+  border-radius: 15px;
+}
+.item-action {
+  border-radius: 11px;
+  min-height: 42px;
+}
+.item-use-action {
+  min-height: 42px;
+}
+.item-detail .shop-requirement {
+  font-size: 12px;
+  color: var(--muted);
+  text-align: center;
+}
+.mini-stats > div {
+  border: 0;
+  background: var(--surface-2);
+  border-radius: 17px;
+}
+.mini-stats > div:first-child {
+  background: var(--mint-bg);
+}
+.mini-stats > div:first-child svg {
+  color: var(--mint);
+}
+.mini-stats > div:nth-child(2) {
+  background: var(--gold-bg);
+}
+.mini-stats > div:nth-child(2) svg {
+  color: var(--gold);
+}
+.mini-badges > button {
+  border-radius: 18px;
+}
+.mini-badges > button > svg {
+  border-radius: 12px;
+  box-sizing: content-box;
+  padding: 8px;
+  background: var(--surface-2);
+}
+.mini-badges > .earned > svg {
+  background: color-mix(in srgb, var(--surface) 50%, var(--gold-bg));
+}
+.chart-track {
+  border-radius: 9px;
+}
+.chart-track > div {
+  background: var(--mint);
+  border-radius: 9px;
+}
+.chart-day.today .chart-track > div {
+  background: var(--accent);
+}
+.theme-options > button {
+  border-radius: 16px;
+}
+.theme-options > button.selected {
+  box-shadow: inset 0 0 0 1px var(--accent);
+}
+.setting-row {
+  min-height: 58px;
+}
+.background-music-card {
+  background: var(--accent-soft);
+  border-color: transparent;
+}
+.dialog {
+  border-radius: 24px;
+  box-shadow: 0 16px 64px #11182b33;
+}
+.effort-options > button {
+  border-radius: 14px;
+}
+.effort-options > button.selected {
+  background: var(--mint-bg);
+  border-color: var(--mint);
+  color: var(--mint);
+}
+.task-repeat-toggle {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 44px;
+  padding: 10px 12px;
+  border-radius: 12px;
+  color: var(--muted);
+  background: var(--surface-2);
+  font-size: 12px;
+}
+.task-repeat-toggle > span {
+  flex: 1;
+  text-align: left;
+}
+.task-repeat-toggle.is-on {
+  background: var(--mint-bg);
+  color: var(--mint);
+}
+.chat-user {
+  background: var(--accent-soft);
+  border-bottom-right-radius: 5px;
+}
+.chat-companion {
+  background: var(--mint-bg);
+  border-bottom-left-radius: 5px;
+}
+.chat-compose {
+  border-radius: 18px;
+}
+.today-trail {
+  background: var(--mint-bg);
+  border-color: transparent;
+}
+.today-trail-goal,
+.today-trail-steps > .complete {
+  color: var(--mint);
+}
+.today-quest-card {
+  border-radius: 24px;
+  box-shadow: 0 8px 24px #30334706;
+}
+.today-quest-title .today-eyebrow {
+  color: var(--mint);
+}
+.today-reward {
+  background: var(--mint-bg);
+}
+.today-play .today-world {
+  border-radius: 24px;
+}
+.today-main-action {
+  border-radius: 14px;
+}
+
+/* Welcome is an invitation to a task habit, with one clear account entry. */
+.fresh-welcome {
+  max-width: 1100px;
+  background: radial-gradient(ellipse at 15% 30%, var(--mint-bg), transparent 60%);
+}
+.welcome-signin {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  min-height: 44px;
+  color: var(--accent);
+  font-weight: 600;
+}
+.fresh-welcome .welcome-main {
+  max-width: 450px;
+  gap: 20px;
+  padding: 20px 24px 28px;
+}
+.welcome-visual {
+  position: relative;
+  padding-bottom: 30px;
+}
+.fresh-welcome .welcome-scene {
+  border: 0;
+  border-radius: 40px;
+  transform: rotate(-2deg);
+  box-shadow: 0 12px 32px #58644616;
+}
+.fresh-welcome .welcome-scene .habitat-art {
+  height: 220px;
+}
+.fresh-welcome .welcome-scene .scene-companion {
+  width: 47%;
+  left: 50%;
+}
+.welcome-reward {
+  position: absolute;
+  top: 16px;
+  right: -4px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  border-radius: 12px;
+  padding: 9px 12px;
+  background: var(--gold-bg);
+  color: var(--gold);
+  font-size: 10px;
+  font-weight: 600;
+  transform: rotate(4deg);
+}
+.welcome-task-preview {
+  position: absolute;
+  bottom: 0;
+  left: 10px;
+  right: 10px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 15px 12px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 18px;
+  box-shadow: 0 6px 24px #3033470e;
+}
+.welcome-task-preview > div {
+  flex: 1;
+  min-width: 0;
+  display: grid;
+  gap: 4px;
+}
+.welcome-task-preview strong {
+  font-size: 12px;
+}
+.welcome-task-preview small {
+  font-size: 10px;
+  color: var(--muted);
+}
+.preview-check {
+  display: grid;
+  place-items: center;
+  height: 30px;
+  width: 30px;
+  border-radius: 50%;
+  background: var(--mint-bg);
+  color: var(--mint);
+}
+.preview-coins {
+  color: var(--gold);
+  display: flex;
+  gap: 4px;
+  font-size: 10px;
+  align-items: center;
+}
+.welcome-kicker {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--mint);
+}
+.fresh-welcome .welcome-heading h1 {
+  font-size: clamp(34px, 8vw, 42px);
+  line-height: 1.08;
+  margin-top: 10px;
+}
+.fresh-welcome .welcome-heading h1 > span {
+  color: var(--accent);
+}
+.fresh-welcome .welcome-heading p {
+  font-size: 14px;
+  margin-top: 10px;
+}
+.welcome-loop {
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+}
+.welcome-loop > span {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  padding: 9px 12px;
+  border-radius: 12px;
+  color: var(--muted);
+  font-size: 11px;
+}
+.welcome-loop svg {
+  color: var(--accent);
+}
+.welcome-cta {
+  display: grid;
+  gap: 15px;
+}
+.fresh-welcome .welcome-start {
+  min-height: 52px;
+  border-radius: 17px;
+  justify-content: center;
+  gap: 14px;
+}
+.welcome-friends {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+}
+.welcome-friends .sprite-pet {
+  width: 34px;
+  height: 34px;
+}
+.welcome-friends > span {
+  margin-left: 10px;
+  font-size: 10px;
+  color: var(--muted);
+  line-height: 1.5;
+}
+
+/* The account card keeps the same friendly world without making the form busy. */
+.fresh-account {
+  background: radial-gradient(ellipse at 20% 15%, var(--mint-bg), transparent 60%);
+}
+.fresh-account .account-layout {
+  margin: 0 auto;
+  gap: 64px;
+  min-height: calc(100dvh - 135px);
+}
+.fresh-account .account-brand {
+  margin-bottom: 16px;
+}
+.fresh-account .account-story h1 {
+  margin: 16px 0 22px;
+  font-size: 44px;
+  line-height: 1.07;
+}
+.fresh-account .account-story .habitat-art {
+  height: 260px;
+  border-radius: 30px;
+  transform: rotate(-2deg);
+}
+.fresh-account .account-card {
+  padding: 24px;
+  border-radius: 28px;
+}
+.fresh-account .account-card > .text-link {
+  margin-bottom: 16px;
+  font-size: 11px;
+}
+.account-greeting {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.account-greeting > .sprite-pet {
+  width: 52px;
+  height: 52px;
+  flex-shrink: 0;
+}
+.account-greeting > span {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: var(--mint-bg);
+  color: var(--mint);
+  font-size: 11px;
+  padding: 12px;
+  border-radius: 14px 14px 14px 3px;
+}
+.fresh-account .account-card h1 {
+  margin: 18px 0 6px;
+  font-size: 27px;
+}
+.fresh-account .account-card > p {
+  font-size: 12px;
+  margin-bottom: 18px;
+}
+.fresh-account .account-card form {
+  gap: 14px;
+}
+.fresh-account .account-tabs {
+  min-height: 44px;
+  padding: 4px;
+}
+.fresh-account .account-tabs > button {
+  font-size: 12px;
+  min-height: 36px;
+  border-radius: 10px;
+}
+.fresh-account label {
+  font-size: 11px;
+  gap: 6px;
+}
+.fresh-account input {
+  min-height: 46px;
+  font-size: 16px;
+  border-radius: 13px;
+}
+.account-input {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+.account-input > svg {
+  position: absolute;
+  left: 12px;
+  color: var(--muted);
+  pointer-events: none;
+}
+.account-input input {
+  padding-left: 39px;
+}
+.password-input input {
+  padding-right: 44px;
+}
+.password-reveal {
+  position: absolute;
+  right: 3px;
+  width: 42px;
+  height: 42px;
+  border-radius: 10px;
+  display: grid;
+  place-items: center;
+  background: transparent;
+  color: var(--muted);
+}
+.fresh-account .forgot-link {
+  margin-top: -3px;
+  min-height: 24px;
+}
+.fresh-account form > .button {
+  min-height: 48px;
+}
+.account-footer {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  margin-top: 18px;
+  color: var(--muted);
+  font-size: 10px;
+}
+
+@media (min-width: 900px) {
+  .fresh-welcome .welcome-main {
+    max-width: 1000px;
+    display: grid;
+    grid-template-columns: 1.1fr 1fr;
+    column-gap: 72px;
+  }
+  .welcome-visual {
+    grid-column: 1;
+    grid-row: 1 / 4;
+    align-self: center;
+  }
+  .fresh-welcome .welcome-heading {
+    text-align: left;
+  }
+  .fresh-welcome .welcome-heading h1 {
+    font-size: 58px;
+  }
+  .fresh-welcome .welcome-scene .habitat-art {
+    height: 340px;
+  }
+  .welcome-loop {
+    justify-content: flex-start;
+  }
+  .welcome-cta {
+    grid-column: 2;
+  }
+  .welcome-friends {
+    justify-content: flex-start;
+  }
+}
+@media (max-width: 760px) {
+  .main-column {
+    padding-bottom: calc(80px + env(safe-area-inset-bottom));
+  }
+  .mobile-nav {
+    left: 12px;
+    right: 12px;
+    bottom: calc(8px + env(safe-area-inset-bottom));
+    height: 62px;
+    padding: 5px;
+    border: 1px solid var(--border);
+    border-radius: 22px;
+    align-items: center;
+    box-shadow: 0 8px 24px #24243814;
+  }
+  .mobile-nav > a {
+    min-width: 0;
+    flex: 1;
+    min-height: 50px;
+    padding: 6px 4px;
+    border-radius: 17px;
+    font-size: 9px;
+  }
+  .topbar-actions {
+    gap: 7px;
+  }
+  .theme-toggle,
+  .mobile-settings,
+  .profile-menu > .topbar-avatar {
+    min-height: 40px;
+  }
+  .main-content {
+    padding: 12px 16px;
+  }
+  .quest-row {
+    padding: 12px 10px;
+    gap: 8px;
+  }
+  .quest-row .category-symbol {
+    display: none;
+  }
+  .quest-title {
+    font-size: 13px;
+  }
+  .quest-reward {
+    font-size: 10px;
+  }
+  .today-quest-column {
+    order: 0;
+  }
+  .today-world-column {
+    order: 1;
+  }
+  .today-quest-column .today-quest-card {
+    min-height: 190px;
+  }
+  .fresh-account {
+    padding: 20px;
+  }
+  .fresh-account .account-layout {
+    display: block;
+    max-width: 420px;
+    min-height: 0;
+  }
+  .fresh-account .account-story {
+    display: none;
+  }
+  .fresh-account .account-card {
+    padding: 20px;
+  }
+  .fresh-account .account-brand {
+    display: inline-flex;
+    margin-bottom: 22px;
+  }
+  .fresh-welcome .welcome-header {
+    padding: 18px 24px 10px;
+  }
+  .fresh-welcome .welcome-main {
+    padding-top: 14px;
+    gap: 18px;
+  }
+}
+@media (max-width: 760px) and (max-height: 700px) {
+  .signup-account .account-footer {
+    display: none;
+  }
+  .shop .item-preview {
+    height: 56px;
+  }
+  .shop .item-tile {
+    padding: 8px;
+    gap: 6px;
+  }
+  .fresh-welcome .welcome-main {
+    gap: 12px;
+    padding-top: 8px;
+    padding-bottom: 16px;
+  }
+  .fresh-welcome .welcome-scene .habitat-art {
+    height: 140px;
+  }
+  .fresh-welcome .welcome-heading h1 {
+    font-size: 31px;
+    margin-top: 6px;
+  }
+  .fresh-welcome .welcome-heading p {
+    margin-top: 6px;
+    font-size: 12px;
+  }
+  .welcome-visual {
+    padding-bottom: 24px;
+  }
+  .welcome-task-preview {
+    padding: 10px;
+  }
+  .welcome-reward {
+    padding: 7px 9px;
+    top: 10px;
+  }
+  .welcome-cta {
+    gap: 9px;
+  }
+  .welcome-loop > span {
+    padding: 7px 9px;
+  }
+  .fresh-account {
+    padding: 12px 16px;
+  }
+  .fresh-account .account-brand {
+    margin-bottom: 12px;
+    font-size: 19px;
+  }
+  .fresh-account .account-card {
+    padding: 16px;
+  }
+  .fresh-account .account-card > .text-link {
+    margin-bottom: 8px;
+  }
+  .account-greeting > .sprite-pet {
+    width: 40px;
+    height: 40px;
+  }
+  .account-greeting > span {
+    padding: 10px;
+    font-size: 10px;
+  }
+  .fresh-account .account-card h1 {
+    font-size: 23px;
+    margin-top: 10px;
+  }
+  .fresh-account .account-card > p {
+    margin-bottom: 12px;
+    font-size: 11px;
+  }
+  .fresh-account .account-card form {
+    gap: 11px;
+  }
+  .account-footer {
+    margin-top: 12px;
+  }
+  .mini-badges > button > svg {
+    padding: 4px;
+    width: 20px;
+    height: 20px;
+  }
+  .mini-badges > button {
+    min-height: 76px;
+    gap: 4px;
+    padding: 8px 4px;
+  }
+  .segments > button {
+    min-height: 38px;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .welcome-scene,
+  .brand-symbol {
+    transform: none;
+  }
+}

@@ -2,6 +2,7 @@ import { test, expect } from '@playwright/test';
 import { createServer } from 'node:http';
 import { readFile } from 'node:fs/promises';
 import { resolve, extname, sep } from 'node:path';
+import { createGame, applyAction } from '../../shared/game.js';
 
 test('a new worker replaces a legacy cached app without closing tabs or losing progress and drafts', async ({
   page,
@@ -10,6 +11,10 @@ test('a new worker replaces a legacy cached app without closing tabs or losing p
   test.setTimeout(45000);
   let legacy = true;
   const root = resolve('dist');
+  let state = createGame(),
+    version = 1;
+  const user = { id: 'updates-qa', name: 'Update QA', email: 'updates@example.invalid' };
+  const token = `e30.${Buffer.from(JSON.stringify({ sub: user.id, exp: Math.floor(Date.now() / 1000) + 900 })).toString('base64url')}.test`;
   const originalWorker = `
       self.addEventListener('install', event => event.waitUntil(caches.open('qa-legacy-app').then(cache => cache.add('/index.html'))));
       self.addEventListener('fetch', event => {
@@ -22,7 +27,21 @@ test('a new worker replaces a legacy cached app without closing tabs or losing p
     res.setHeader('Cache-Control', 'no-store');
     if (pathname === '/api/auth/get-session') {
       res.setHeader('Content-Type', 'application/json');
-      return res.end('null');
+      return res.end(JSON.stringify({ user }));
+    }
+    if (pathname === '/api/auth/token') {
+      res.setHeader('Content-Type', 'application/json');
+      return res.end(JSON.stringify({ token }));
+    }
+    if (pathname === '/api/game') {
+      res.setHeader('Content-Type', 'application/json');
+      if (req.method === 'POST') {
+        let body = '';
+        for await (const chunk of req) body += chunk;
+        state = applyAction(state, JSON.parse(body)).state;
+        version++;
+      }
+      return res.end(JSON.stringify({ state, version }));
     }
     if (pathname === '/sw.js' && legacy) {
       res.setHeader('Content-Type', 'application/javascript');
@@ -65,7 +84,7 @@ test('a new worker replaces a legacy cached app without closing tabs or losing p
   const origin = `http://127.0.0.1:${server.address().port}`;
   try {
     await page.goto(origin);
-    await page.getByRole('button', { name: /Let.s play/ }).click();
+    await expect(page.getByRole('heading', { name: 'Today', exact: true })).toBeVisible();
     await page.evaluate(() => navigator.serviceWorker.ready);
     await page.reload();
     await page.waitForFunction(() => Boolean(navigator.serviceWorker.controller));
@@ -73,8 +92,8 @@ test('a new worker replaces a legacy cached app without closing tabs or losing p
       .getByRole('button', { name: 'Complete Make space for one important thing', exact: true })
       .click();
     await expect(page.locator('.wallet-pill strong')).toHaveText('80');
-    await page.getByRole('button', { name: 'Add a quest', exact: true }).click();
-    await page.getByRole('textbox', { name: 'Quest', exact: true }).fill('Keep this draft');
+    await page.getByRole('button', { name: 'New task', exact: true }).click();
+    await page.getByRole('textbox', { name: 'Task', exact: true }).fill('Keep this draft');
     legacy = false;
     await page.evaluate(async () => {
       const registration = await navigator.serviceWorker.getRegistration();
@@ -99,7 +118,7 @@ test('a new worker replaces a legacy cached app without closing tabs or losing p
         registration.update().catch(reject);
       });
     });
-    await expect(page.getByRole('textbox', { name: 'Quest', exact: true })).toHaveValue(
+    await expect(page.getByRole('textbox', { name: 'Task', exact: true })).toHaveValue(
       'Keep this draft',
     );
     expect(
@@ -109,11 +128,9 @@ test('a new worker replaces a legacy cached app without closing tabs or losing p
     await page.reload();
     await expect(page.locator('.wallet-pill strong')).toHaveText('80');
     await page.goto(`${origin}/login`);
+    await expect(page.getByRole('link', { name: 'Open my day', exact: true })).toBeVisible();
     await expect(
-      page.getByRole('button', { name: 'Continue adventure', exact: true }),
-    ).toBeVisible();
-    await expect(
-      page.getByText('Cloud accounts are not connected. Guest mode is fully playable.'),
+      page.getByText('Sign-in is unavailable. Please try again later.'),
     ).not.toBeVisible();
   } finally {
     server.closeAllConnections();

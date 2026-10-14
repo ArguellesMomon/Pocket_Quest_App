@@ -1,12 +1,11 @@
 import { test, expect } from '@playwright/test';
 import { createGame, dayKey } from '../../shared/game.js';
+import { mockAccount } from './account-fixture.js';
 
 async function adventure(page, context, transform = (state) => state) {
   const state = transform(createGame('samo'));
-  await context.route('**/api/auth/get-session', (route) => route.fulfill({ json: null }));
+  await mockAccount(page, context, { state });
   await page.addInitScript((state) => {
-    if (!localStorage.getItem('pocketquest-guest-v1'))
-      localStorage.setItem('pocketquest-guest-v1', JSON.stringify(state));
     window.touchCues = [];
     window.soundCues = [];
     Object.defineProperty(navigator, 'vibrate', {
@@ -145,11 +144,11 @@ test('quest → reward → next quest awards once and the third win unlocks the 
   const heading = await loot.locator('.today-reward-heading').boundingBox();
   expect(art.y + art.height).toBeLessThanOrEqual(heading.y);
   await expect(page.locator('.wallet-pill strong')).toHaveText('80');
-  await page.getByRole('button', { name: 'Next quest', exact: true }).click();
+  await page.getByRole('button', { name: 'Next task', exact: true }).click();
   await expect(currentQuest(page).getByRole('button', { name: /^Complete / })).toBeFocused();
   await finish(page);
   await expect(page.locator('.wallet-pill strong')).toHaveText('90');
-  await page.getByRole('button', { name: 'Next quest', exact: true }).click();
+  await page.getByRole('button', { name: 'Next task', exact: true }).click();
   await finish(page);
   await expect(loot).toContainText('DAILY BONUS UNLOCKED');
   await expect(loot).toContainText('+30');
@@ -166,7 +165,8 @@ test('quest → reward → next quest awards once and the third win unlocks the 
   await expect(page.locator('.today-trail')).toContainText('Bonus earned');
   expect(
     await page.evaluate(
-      () => JSON.parse(localStorage.getItem('pocketquest-guest-v1')).completions.length,
+      () =>
+        JSON.parse(localStorage.getItem('pocketquest-cloud-v2:design-qa')).base.completions.length,
     ),
   ).toBe(3);
 });
@@ -301,9 +301,9 @@ test('level-ups and the final quest have a clear return to the world', async ({
   await expect(page.getByRole('region', { name: 'Quest reward' })).toContainText(
     'Finn leveled up!',
   );
-  await page.getByRole('button', { name: 'Back to your world' }).click();
+  await page.getByRole('button', { name: 'Back to my day' }).click();
   await expect(page.getByRole('heading', { name: 'You did good today.' })).toBeVisible();
-  await expect(page.getByRole('button', { name: 'New quest', exact: true })).toBeVisible();
+  await expect(page.getByRole('button', { name: 'New task', exact: true })).toBeVisible();
 });
 
 test('a rejected cloud completion restores the quest and removes its reward reveal', async ({

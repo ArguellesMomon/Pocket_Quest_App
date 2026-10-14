@@ -1,8 +1,10 @@
 import { test, expect } from '@playwright/test';
+import { mockAccount } from './account-fixture.js';
 
 test.use({ viewport: { width: 390, height: 844 }, hasTouch: true, isMobile: true });
 
 test.beforeEach(async ({ page }) => {
+  await mockAccount(page);
   // Chromium cannot open an iOS keyboard. Model Safari's smaller visual viewport
   // while keeping its layout viewport unchanged.
   await page.addInitScript(() => {
@@ -23,10 +25,9 @@ test('mobile form controls stay readable and quest sheets fit above the keyboard
   page,
 }) => {
   await page.goto('/');
-  await page.getByRole('button', { name: /Let.s play/ }).click();
-  await page.getByRole('button', { name: 'Add a quest', exact: true }).click();
+  await page.getByRole('button', { name: 'New task', exact: true }).click();
   const sheet = page.getByRole('dialog');
-  const title = sheet.getByRole('textbox', { name: 'Quest', exact: true });
+  const title = sheet.getByRole('textbox', { name: 'Task', exact: true });
   await title.focus();
   await expect(title).toHaveCSS('font-size', '16px');
 
@@ -42,17 +43,17 @@ test('mobile form controls stay readable and quest sheets fit above the keyboard
   await page.evaluate(() => window.testKeyboard(360));
 
   await title.fill('Type with the keyboard open');
-  await sheet.getByRole('button', { name: 'Add quest', exact: true }).scrollIntoViewIfNeeded();
-  const saveBox = await sheet.getByRole('button', { name: 'Add quest', exact: true }).boundingBox();
+  await sheet.getByRole('button', { name: 'Add task', exact: true }).scrollIntoViewIfNeeded();
+  const saveBox = await sheet.getByRole('button', { name: 'Add task', exact: true }).boundingBox();
   expect(saveBox.y + saveBox.height).toBeLessThanOrEqual(361);
-  await sheet.getByRole('button', { name: 'Add quest', exact: true }).click();
+  await sheet.getByRole('button', { name: 'Add task', exact: true }).click();
   await page.evaluate(() => window.testKeyboard(innerHeight));
   await expect(page.locator('html')).not.toHaveAttribute('data-keyboard-open');
   await expect(page.getByRole('navigation', { name: 'Mobile navigation' })).toBeVisible();
 
   await page.setViewportSize({ width: 320, height: 568 });
-  await page.getByRole('button', { name: 'Add a quest', exact: true }).click();
-  await sheet.getByRole('textbox', { name: 'Quest', exact: true }).focus();
+  await page.getByRole('button', { name: 'New task', exact: true }).click();
+  await sheet.getByRole('textbox', { name: 'Task', exact: true }).focus();
   await page.evaluate(() => window.testKeyboard(260));
   await expect(sheet).toHaveCSS('max-height', '244px');
   await sheet.getByRole('button', { name: 'Cancel' }).scrollIntoViewIfNeeded();
@@ -62,8 +63,7 @@ test('mobile form controls stay readable and quest sheets fit above the keyboard
 
 test('search, settings, and account inputs retain usable text sizes', async ({ page }) => {
   await page.goto('/');
-  await page.getByRole('button', { name: /Let.s play/ }).click();
-  await page.getByRole('link', { name: 'Quests', exact: true }).click();
+  await page.getByRole('link', { name: 'Tasks', exact: true }).click();
   await page.getByRole('button', { name: 'Search quests' }).click();
   await expect(page.getByRole('textbox', { name: 'Search quests' })).toHaveCSS('font-size', '16px');
   await page.evaluate(() => window.testKeyboard(390));
@@ -80,7 +80,8 @@ test('search, settings, and account inputs retain usable text sizes', async ({ p
   const saveBox = await page.getByRole('button', { name: 'Save changes' }).boundingBox();
   expect(saveBox.y + saveBox.height).toBeLessThanOrEqual(391);
 
+  await page.route('**/api/auth/get-session', (route) => route.fulfill({ json: null }));
   await page.goto('/login');
   await expect(page.getByRole('textbox', { name: 'Email address' })).toHaveCSS('font-size', '16px');
-  await expect(page.getByLabel('Password')).toHaveCSS('font-size', '16px');
+  await expect(page.getByLabel('Password', { exact: true })).toHaveCSS('font-size', '16px');
 });

@@ -381,7 +381,7 @@ function taskFields(data) {
     due,
   };
 }
-// This reducer runs both on the server and in guest mode. Rewards and prices are never accepted from the client.
+// This reducer runs on the server and for optimistic account previews. Rewards and prices are never accepted from the client.
 export function applyAction(current, action, now = Date.now()) {
   const state = upgradeGame(current);
   const previousLevel = levelFor(current.xp);

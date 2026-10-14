@@ -27,7 +27,7 @@ import Admin from './pages/Admin';
 import { preloadCompanions } from './lib/sprite-preload';
 const destinations = [
   { path: '/dashboard', label: 'Today', icon: 'sun' },
-  { path: '/quests', label: 'Quests', icon: 'flag' },
+  { path: '/quests', label: 'Tasks', icon: 'tasks' },
   { path: '/habitat', label: 'Pets', icon: 'paw' },
   { path: '/market', label: 'Shop', icon: 'shop' },
   { path: '/journey', label: 'Stats', icon: 'trophy' },
@@ -104,7 +104,7 @@ function Shell({ children, onAdd, onHelp }) {
         <div className="sidebar-bottom">
           <button className="nav-link" onClick={onHelp}>
             <Icon name="help" />
-            <span>Field guide</span>
+            <span>Quick guide</span>
           </button>
           <NavLink to="/settings" className="nav-link">
             <Icon name="settings" />
@@ -114,16 +114,16 @@ function Shell({ children, onAdd, onHelp }) {
             <div className="avatar">{state.name.slice(0, 1).toUpperCase()}</div>
             <div>
               <strong>{state.name}</strong>
-              <span>{user ? 'Cloud adventure' : 'Guest adventurer'}</span>
+              <span>Small steps, every day</span>
             </div>
-            <Icon name={user ? 'cloud' : 'sprout'} size={17} />
+            <Icon name="cloud" size={17} />
           </div>
         </div>
       </aside>
       <div className="main-column">
         <header className="topbar">
           <div className="topbar-location">
-            <span className="desktop-only">Your world</span>
+            <span className="desktop-only">Your pocket</span>
             <Icon className="desktop-only" name="right" size={14} />
             <strong className="desktop-only">{active?.label || 'Settings'}</strong>
             <Brand compact />
@@ -205,7 +205,7 @@ function Adventure() {
         game.state?.settings.motion === false ? 'off' : 'on';
       document
         .querySelector('meta[name="theme-color"]')
-        ?.setAttribute('content', active === 'dark' ? '#20192d' : '#f7f3fc');
+        ?.setAttribute('content', active === 'dark' ? '#191d2b' : '#f6f5f0');
     };
     apply();
     media.addEventListener('change', apply);
@@ -240,7 +240,7 @@ function Adventure() {
       <GameContext.Provider value={context}>
         <div className="connection-screen">
           <Brand />
-          <h1>Let’s reconnect.</h1>
+          <h1>A tiny connection hiccup.</h1>
           <p>{game.error}</p>
           <div className="button-row">
             <button className="button primary" onClick={game.restore}>
@@ -251,26 +251,25 @@ function Adventure() {
               onClick={async () => {
                 try {
                   await game.signOut();
-                  game.startGuest('cat');
-                  navigate('/dashboard');
+                  navigate('/login');
                 } catch (e) {
                   game.toast(e.message, 'error');
                 }
               }}
             >
-              Continue as guest
+              Back to sign in
             </button>
           </div>
         </div>
       </GameContext.Provider>
     );
   const protectedPage = (component) =>
-    game.state ? (
+    game.state && game.user ? (
       <Shell onAdd={context.addQuest} onHelp={context.openHelp}>
         {component}
       </Shell>
     ) : (
-      <Navigate to="/" replace />
+      <Navigate to="/login" replace />
     );
   return (
     <GameContext.Provider value={context}>

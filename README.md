@@ -11,13 +11,15 @@ npm install
 npm run dev
 ```
 
-Open **http://127.0.0.1:5175**. Guest mode works without database credentials and saves progress in this browser. Choose Mochi, Nori, or Chami (cats), or Pip, Maple, or Finn (dogs).
+Open **http://127.0.0.1:5175**. Configure Neon below, then create an account or sign in. Choose Mochi, Nori, Chami, Pip, Maple, or Finn from Pets → Friends.
 
 ## What works
 
-- Compact Today, Quests, Pets, Shop, Stats, and Settings screens; longer lists use pagination and category tabs.
+- A friendly welcome and compact sign-in/sign-up flow with password visibility controls. Account access is required; there are no guest play entry points.
+- Warm paper, lilac, and mint colors with a matching dark palette, clear task icons, and a floating mobile navigation dock.
+- Compact Today, Tasks, Pets, Shop, Stats, and Settings screens; longer lists use pagination and category tabs. Today puts the next task before the companion scene on phones.
 - Today uses a companion world, one-quest deck, tap-through queue and wins, daily treasure trail, inline reward reveals, focused timers, and optional sound/haptic feedback. See [the Today design and checks](docs/TODAY-PLAY.md).
-- One-time quests and daily rituals, effort-based rewards, due dates, categories, search, sorting, editing, and removal.
+- One-time tasks and one-tap daily repetition, effort-based rewards, clear Today/Overdue dates, categories, search, sorting, editing, and removal. The task list defaults to due dates first, with recent tasks breaking ties.
 - Daily three-quest bonus, timezone-aware resets and streaks, companion levels, and six earned milestones.
 - Sixteen purchasable items, including five foods, toys, room decor, and illustrated backgrounds. Shop pages show four items at a time. A free Dream garden is always available.
 - Six animated companions with stat-driven moods, feeding/play reactions, celebration, and bounded idle stat decay. Chami combines eight supplied frames with 24 new mood poses; Finn uses the original Samoyed sheet.
@@ -31,7 +33,7 @@ Open **http://127.0.0.1:5175**. Guest mode works without database credentials an
 - Email/password accounts, signup, sign-in/out, email-code UI, and password recovery/reset UI through Neon Auth.
 - Immediate theme, companion, care, and quest updates with an ordered background save queue, server validation, rollback, and automatic idempotent retries. Queued commands and cached account progress survive reload; Account settings show a compact save status.
 
-Guest and cloud adventures are separate. Guest progress stays on this device; account progress is saved in Neon.
+Account progress is saved in Neon. Previously saved guest records remain untouched on the device, but do not open the app or automatically become account progress. Signed-in cached accounts can keep working offline, with changes queued until they reconnect.
 
 Old scarf and crown purchases become Peach beach and Cloud nine backgrounds at no extra cost. Active Starlight clearing purchases move to the background slot. Companion progress and room decor remain intact. Source artwork, prompts, and the packaging script are recorded in [assets/shop/README.md](assets/shop/README.md).
 
@@ -69,7 +71,7 @@ Only provisioned user IDs can use `/api/admin`; email addresses, client flags, a
 
 ## Companion chat
 
-Open **Pets → Chat**. Choose any of the six friends in the compact chat header; this does not switch your active pet. Each signed-in user has an independent conversation and rolling memory summary with each character. The options menu holds chat details and clear-chat controls. Guests see a sign-in invitation. Chat requires an internet connection; saved chats are fetched from Neon and are not cached in browser storage.
+Open **Pets → Chat**. Choose any of the six friends in the compact chat header; this does not switch your active pet. Each user has an independent conversation and rolling memory summary with each character. The options menu holds chat details and clear-chat controls. Chat requires an internet connection; saved chats are fetched from Neon and are not cached in browser storage.
 
 Create a key in the [Groq Console](https://console.groq.com/keys) using a Free plan account and add it to ignored `.env.local` (and your deployment's server environment):
 
@@ -97,9 +99,9 @@ npm run build
 
 On Windows the browser tests use installed Microsoft Edge. Other platforms use Playwright Chromium; run `npx playwright install chromium` if needed. `PLAYWRIGHT_CHANNEL` can select another installed channel. The browser test runner starts a local server when one is not already running.
 
-The default browser tests use local guest data. To opt into the live Neon UI test, set `RUN_CLOUD_E2E=1` before running `npm run test:e2e`. That test creates a QA account at a reserved `.invalid` address. `node scripts/cloud-smoke.mjs` also exercises the real API using a QA account. These tests leave their QA accounts in this development project and do not send email.
+Default browser tests use simulated signed-in accounts and authoritative game responses, without writing to Neon. They cover signed-out route gating, sign-in errors, password visibility, both themes, phone sizes, task repetition, rewards, chat, and settings. To opt into the live Neon UI test, set `RUN_CLOUD_E2E=1` before running `npm run test:e2e`. That test creates a QA account at a reserved `.invalid` address. `node scripts/cloud-smoke.mjs` also exercises the real API using a QA account. These tests leave their QA accounts in this development project and do not send email.
 
-To test the installed guest PWA offline, build the app, run `npm run preview -- --port 4175`, and set `RUN_PWA_E2E=1` before the browser tests. Visual previews are saved to `docs/previews`.
+To test the installed account PWA offline, build the app, run `npm run preview -- --port 4175`, and set `RUN_PWA_E2E=1` before the browser tests. Visual previews are saved to `docs/previews`.
 
 ```sh
 npm run format

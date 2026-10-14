@@ -118,10 +118,10 @@ export default function Today() {
         <ScreenHeading title="Today" subtitle={date}>
           <button
             className="button primary new-quest-button"
-            aria-label="Add a quest"
+            aria-label="New task"
             onClick={newQuest}
           >
-            <Icon name="plus" size={16} /> New quest
+            <Icon name="plus" size={16} /> New task
           </button>
         </ScreenHeading>
         <div className="today-play-layout">
@@ -215,8 +215,8 @@ export default function Today() {
                 onClick={() => setDrawer('queue')}
                 aria-label={`Choose a quest, ${active.length} remaining`}
               >
-                <Icon name="flag" size={16} />
-                Your quests <small>{active.length}</small>
+                <Icon name="tasks" size={16} />
+                Up next <small>{active.length}</small>
                 <Icon name="down" size={13} />
               </button>
               <div className="today-deck-pager">
@@ -254,7 +254,7 @@ export default function Today() {
                       ? `LEVEL ${receipt.level} UNLOCKED`
                       : receipt.bonus
                         ? 'DAILY BONUS UNLOCKED'
-                        : 'QUEST CLEARED'}
+                        : 'TASK COMPLETE'}
                   </span>
                   <h2>
                     {receipt.levelUp
@@ -284,7 +284,7 @@ export default function Today() {
                     setSelected(null);
                   }}
                 >
-                  {active.length ? 'Next quest' : 'Back to your world'}
+                  {active.length ? 'Next task' : 'Back to my day'}
                   <Icon name="arrow" size={18} />
                 </button>
               </section>
@@ -306,7 +306,7 @@ export default function Today() {
                   </span>
                 </div>
                 <div className="today-quest-title">
-                  <span className="today-eyebrow">ONE SMALL ADVENTURE</span>
+                  <span className="today-eyebrow">ONE THING AT A TIME</span>
                   <button
                     aria-label={`View quest ${task.title}`}
                     onClick={() => setDrawer('detail')}
@@ -342,7 +342,7 @@ export default function Today() {
                     onClick={() => act({ type: 'task.complete', taskId: task.id })}
                   >
                     <Icon name="check" size={18} />
-                    Complete quest
+                    Done
                   </button>
                 </div>
               </section>
@@ -351,14 +351,10 @@ export default function Today() {
                 <SpritePet species={state.pet.species} mood="happy" />
                 <span className="today-eyebrow">ROOM TO BREATHE</span>
                 <h2>{done ? 'You did good today.' : 'Your next adventure starts here.'}</h2>
-                <p>
-                  {done
-                    ? 'Enjoy a moment with your companion.'
-                    : 'Turn one small thing into a quest.'}
-                </p>
+                <p>{done ? 'Enjoy a moment with your companion.' : 'Start with one small task.'}</p>
                 <button className="button primary today-main-action" onClick={newQuest}>
                   <Icon name="plus" size={17} />
-                  New quest
+                  Add task
                 </button>
               </section>
             )}
@@ -402,7 +398,7 @@ export default function Today() {
                   }}
                 >
                   <Icon name="edit" size={17} />
-                  Edit quest
+                  Edit task
                 </button>
                 <button
                   className="button primary"

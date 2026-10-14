@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useGame } from '../context';
-import { CATEGORIES, DIFFICULTIES, completed, levelFor, petStats } from '../../shared/game';
+import { CATEGORIES, DIFFICULTIES, completed, dayKey, levelFor, petStats } from '../../shared/game';
 import Icon from './Icon';
 import Dialog from './Dialog';
 import { PixelPet } from './PixelArt';
@@ -55,6 +55,19 @@ export function QuestRow({ task }) {
   const { state, now, act, busy, editQuest } = useGame();
   const done = completed(state, task, now),
     reward = DIFFICULTIES[task.difficulty];
+  const today = dayKey(now, state.timezone);
+  const dueLabel =
+    task.due === today
+      ? 'Today'
+      : task.due < today
+        ? 'Overdue'
+        : task.due
+          ? new Intl.DateTimeFormat('en', {
+              month: 'short',
+              day: 'numeric',
+              timeZone: 'UTC',
+            }).format(new Date(`${task.due}T12:00:00Z`))
+          : '';
   const [confirm, setConfirm] = useState(false);
   const [view, setView] = useState(false);
   const [menu, setMenu] = useState(false);
@@ -83,8 +96,15 @@ export function QuestRow({ task }) {
           <div className="quest-meta">
             <span>{task.category}</span>
             <span className="meta-separator">·</span>
-            <span>{task.recurrence === 'daily' ? 'Daily ritual' : reward.label}</span>
-            {task.due && <span className="due-chip">Due {task.due}</span>}
+            <span>{task.recurrence === 'daily' ? 'Daily' : reward.label}</span>
+            {task.due && (
+              <span
+                className={`due-chip ${task.due < today ? 'overdue' : task.due === today ? 'today' : ''}`}
+              >
+                <Icon name="clock" size={10} />
+                {dueLabel}
+              </span>
+            )}
           </div>
         </div>
         <span className="quest-reward">
@@ -207,7 +227,7 @@ export function QuestEditor({ task, onClose }) {
   const update = (key, value) => setData((d) => ({ ...d, [key]: value }));
   const [advanced, setAdvanced] = useState(Boolean(task?.notes || task?.due));
   return (
-    <Dialog title={task ? 'Edit quest' : 'New quest'} onClose={onClose}>
+    <Dialog title={task ? 'Edit task' : 'New task'} onClose={onClose}>
       <form
         className="dialog-body quest-form"
         onSubmit={async (e) => {
@@ -223,19 +243,31 @@ export function QuestEditor({ task, onClose }) {
         }}
       >
         <label>
-          Quest
+          Task
           <input
             autoFocus
             required
             maxLength={100}
             value={data.title}
             onChange={(e) => update('title', e.target.value)}
-            placeholder="What’s next?"
+            placeholder="One thing you’d like to do"
           />
         </label>
+        <button
+          type="button"
+          className={`task-repeat-toggle ${data.recurrence === 'daily' ? 'is-on' : ''}`}
+          role="switch"
+          aria-label="Repeat daily"
+          aria-checked={data.recurrence === 'daily'}
+          onClick={() => update('recurrence', data.recurrence === 'daily' ? 'once' : 'daily')}
+        >
+          <Icon name="sun" size={16} />
+          <span>Repeat daily</span>
+          <Icon name={data.recurrence === 'daily' ? 'check' : 'plus'} size={16} />
+        </button>
         {advanced && (
           <label>
-            A little more detail <span className="optional">optional</span>
+            Notes <span className="optional">optional</span>
             <textarea
               maxLength={1000}
               rows={3}
@@ -312,7 +344,7 @@ export function QuestEditor({ task, onClose }) {
             Cancel
           </button>
           <button className="button primary" disabled={busy || !data.title.trim()}>
-            {busy ? 'Saving…' : task ? 'Save' : 'Add quest'}
+            {busy ? 'Saving…' : task ? 'Save' : 'Add task'}
             <Icon name="plus" size={17} />
           </button>
         </div>
@@ -375,10 +407,14 @@ export function LevelProgress() {
 }
 export function HelpDialog({ onClose }) {
   return (
-    <Dialog title="How to play" onClose={onClose}>
+    <Dialog title="Little steps, real progress" onClose={onClose}>
       <div className="dialog-body quick-guide">
         {[
-          { icon: 'flag', title: 'Finish a quest', text: 'Earn coins and XP.' },
+          {
+            icon: 'tasks',
+            title: 'Finish a task',
+            text: 'Earn coins and XP for your real-life wins.',
+          },
           {
             icon: 'heart',
             title: 'Care for your friend',

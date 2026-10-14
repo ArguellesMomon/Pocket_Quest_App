@@ -1,9 +1,12 @@
 import { test, expect } from '@playwright/test';
 import { randomUUID } from 'node:crypto';
-async function guest(page, species = 'Mochi') {
-  await page.goto('/');
-  await page.getByRole('button', { name: new RegExp(`Choose ${species},`) }).click();
-  await page.getByRole('button', { name: /Let.s play/ }).click();
+import { createGame, SPECIES } from '../../shared/game.js';
+import { mockAccount } from './account-fixture.js';
+async function account(page, species = 'Mochi') {
+  await mockAccount(page, page.context(), {
+    state: createGame(SPECIES.find((pet) => pet.name === species).id),
+  });
+  await page.goto('/dashboard');
   await expect(page.getByRole('heading', { name: 'Today', exact: true })).toBeVisible();
 }
 async function snapshot(page, path) {
@@ -23,15 +26,15 @@ test('compact quests, direct purchases, equipment, care, and settings persist', 
   const errors = [];
   page.on('pageerror', (e) => errors.push(e.message));
   await page.setViewportSize({ width: 390, height: 844 });
-  await guest(page);
+  await account(page);
   await page
     .getByRole('button', { name: 'Complete Make space for one important thing', exact: true })
     .click();
   await expect(page.locator('.wallet-pill strong')).toHaveText('80');
-  await page.getByRole('button', { name: 'Add a quest', exact: true }).click();
-  await page.getByRole('textbox', { name: 'Quest', exact: true }).fill('Ship my portfolio');
+  await page.getByRole('button', { name: 'New task', exact: true }).click();
+  await page.getByRole('textbox', { name: 'Task', exact: true }).fill('Ship my portfolio');
   await page.getByRole('button', { name: /Hard/ }).click();
-  await page.getByRole('button', { name: 'Add quest', exact: true }).click();
+  await page.getByRole('button', { name: 'Add task', exact: true }).click();
   await page.getByRole('button', { name: 'Complete Ship my portfolio', exact: true }).click();
   await expect(page.locator('.wallet-pill strong')).toHaveText('115');
   await page.reload();
@@ -64,7 +67,7 @@ test('phone screens fit the viewport, navigation stays visible, and quests pagin
   page,
 }) => {
   test.setTimeout(60000);
-  await guest(page);
+  await account(page);
   for (const size of [
     { width: 390, height: 844 },
     { width: 320, height: 568 },
@@ -86,23 +89,23 @@ test('phone screens fit the viewport, navigation stays visible, and quests pagin
   await page.setViewportSize({ width: 390, height: 844 });
   await page.goto('/quests');
   for (let i = 0; i < 7; i++) {
-    await page.getByRole('button', { name: 'Add a quest', exact: true }).click();
-    await page.getByRole('textbox', { name: 'Quest', exact: true }).fill(`Quest ${i}`);
-    await page.getByRole('button', { name: 'Add quest', exact: true }).click();
+    await page.getByRole('button', { name: 'New task', exact: true }).click();
+    await page.getByRole('textbox', { name: 'Task', exact: true }).fill(`Quest ${i}`);
+    await page.getByRole('button', { name: 'Add task', exact: true }).click();
   }
   await expect(page.locator('.paged-quests .quest-row')).toHaveCount(5);
   await page.getByRole('button', { name: 'Next page', exact: true }).click();
   await expect(page.locator('.pager')).toContainText('2 / 3');
   await page.getByRole('button', { name: 'Search quests', exact: true }).click();
   await page.getByRole('textbox', { name: 'Search quests', exact: true }).fill('xyz-no-quest');
-  await expect(page.getByText('No matching quests', { exact: true })).toBeVisible();
+  await expect(page.getByText('No matching tasks', { exact: true })).toBeVisible();
   await expect(page.getByRole('navigation', { name: 'Mobile navigation' })).toBeVisible();
 });
 test('sprites visibly advance, react to care, and respect reduced motion; focus stays available in a sheet', async ({
   page,
 }) => {
   await page.setViewportSize({ width: 390, height: 844 });
-  await guest(page, 'Finn');
+  await account(page, 'Finn');
   const pet = page.locator('.scene-companion .sprite-pet');
   const initial = await pet.getAttribute('data-frame');
   await expect.poll(() => pet.getAttribute('data-frame')).not.toBe(initial);
@@ -125,9 +128,11 @@ test('sprites visibly advance, react to care, and respect reduced motion; focus 
 });
 test('phone-first visual previews', async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 });
+  const data = await mockAccount(page, page.context(), { signedIn: false });
   await page.goto('/');
   await snapshot(page, 'welcome-mobile');
-  await page.getByRole('button', { name: /Let.s play/ }).click();
+  data.signedIn = true;
+  await page.goto('/dashboard');
   await snapshot(page, 'today-mobile-light');
   await page.getByRole('button', { name: 'Toggle light and dark mode' }).click();
   await snapshot(page, 'today-mobile-dark');
@@ -172,13 +177,12 @@ test('clear shop controls buy, use, preview, and apply scenes without losing pur
   page,
 }) => {
   await page.setViewportSize({ width: 390, height: 844 });
-  await guest(page);
-  await expect(page.getByRole('button', { name: 'Add a quest', exact: true })).toHaveText(
-    'New quest',
-  );
+  await account(page);
+  await expect(page.getByRole('button', { name: 'New task', exact: true })).toHaveText('New task');
   await page
     .getByRole('button', { name: 'Complete Make space for one important thing', exact: true })
     .click();
+  await page.getByRole('link', { name: 'Pets', exact: true }).click();
   await page.getByRole('link', { name: 'Change background', exact: true }).click();
   await expect(page.getByRole('button', { name: 'Scenes', exact: true })).toHaveAttribute(
     'aria-pressed',
@@ -199,6 +203,7 @@ test('clear shop controls buy, use, preview, and apply scenes without losing pur
   await page.getByRole('link', { name: 'Today', exact: true }).click();
   await expect(page.locator('.habitat-art')).toHaveAttribute('data-background', 'sunset');
   await snapshot(page, 'peach-beach-mobile');
+  await page.getByRole('link', { name: 'Pets', exact: true }).click();
   await page.getByRole('link', { name: 'Change background', exact: true }).click();
   await page.getByRole('button', { name: 'Apply Dream garden', exact: true }).click();
   await page.getByRole('button', { name: 'Apply Peach beach', exact: true }).click();
@@ -239,7 +244,7 @@ test('clear shop controls buy, use, preview, and apply scenes without losing pur
 test('low-stat moods render the correct sprite rows for the new characters', async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 });
   await page.emulateMedia({ reducedMotion: 'reduce' });
-  await guest(page);
+  await account(page);
   for (const c of [
     { id: 'cat', name: 'Mochi', energy: 30, joy: 75, mood: 'sleepy', row: 2 },
     { id: 'nori', name: 'Nori', energy: 75, joy: 30, mood: 'lonely', row: 5 },
@@ -250,7 +255,7 @@ test('low-stat moods render the correct sprite rows for the new characters', asy
     { id: 'chami', name: 'Chami', energy: 75, joy: 30, mood: 'lonely', row: 4 },
   ]) {
     await page.evaluate((c) => {
-      const state = JSON.parse(localStorage.getItem('pocketquest-guest-v1'));
+      const state = JSON.parse(localStorage.getItem('pocketquest-test-state'));
       Object.assign(state.pet, {
         species: c.id,
         name: c.name,
@@ -259,7 +264,7 @@ test('low-stat moods render the correct sprite rows for the new characters', asy
         updatedAt: Date.now(),
         lastInteraction: null,
       });
-      localStorage.setItem('pocketquest-guest-v1', JSON.stringify(state));
+      localStorage.setItem('pocketquest-test-state', JSON.stringify(state));
     }, c);
     await page.goto('/habitat');
     await page.reload();
@@ -275,7 +280,7 @@ test('Chami reacts with her own frames and new shop pages buy, use, and display 
   page,
 }) => {
   await page.setViewportSize({ width: 390, height: 844 });
-  await guest(page, 'Chami');
+  await account(page, 'Chami');
   await page.emulateMedia({ reducedMotion: 'reduce' });
   const pet = page.locator('.scene-companion .sprite-pet');
   await expect(pet).toHaveAttribute('data-mood', 'happy');
@@ -291,10 +296,10 @@ test('Chami reacts with her own frames and new shop pages buy, use, and display 
   await page.getByRole('button', { name: 'Play with companion', exact: true }).click();
   await expect(pet).toHaveAttribute('data-frame', '2-0');
   await page.evaluate(() => {
-    const game = JSON.parse(localStorage.getItem('pocketquest-guest-v1'));
+    const game = JSON.parse(localStorage.getItem('pocketquest-test-state'));
     game.coins = 1000;
     game.xp = 450;
-    localStorage.setItem('pocketquest-guest-v1', JSON.stringify(game));
+    localStorage.setItem('pocketquest-test-state', JSON.stringify(game));
   });
   await page.goto('/market');
   await page.getByRole('button', { name: 'Buy Salmon treats for 20 coins', exact: true }).click();
@@ -353,7 +358,7 @@ test('Neon cloud progress and safe retry remain compatible with the new UI', asy
   await page.goto('/login');
   await page.getByRole('textbox', { name: 'Email address' }).fill(email);
   await page.getByLabel('Password', { exact: true }).fill(password);
-  await page.getByRole('button', { name: 'Continue adventure', exact: true }).click();
+  await page.locator('form > button[type=submit]').click();
   await expect(page.getByRole('heading', { name: 'Today', exact: true })).toBeVisible();
   let interrupted = false,
     committed = false,
@@ -417,5 +422,5 @@ test('Neon cloud progress and safe retry remain compatible with the new UI', asy
   await page.getByRole('button', { name: 'Account', exact: true }).click();
   await page.getByRole('button', { name: 'Sign out', exact: true }).click();
   await page.getByRole('dialog').getByRole('button', { name: 'Sign out', exact: true }).click();
-  await expect(page.getByRole('button', { name: /Let.s play/ })).toBeVisible();
+  await expect(page.getByRole('link', { name: 'Get started', exact: true })).toBeVisible();
 });

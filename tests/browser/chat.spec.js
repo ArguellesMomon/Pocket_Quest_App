@@ -63,23 +63,13 @@ async function chatAccount(context) {
   });
   return data;
 }
-test('guest chat explains sign-in and remains usable on a small screen', async ({
-  page,
-  context,
-}) => {
+test('signed-out visitors must sign in before opening pets or chat', async ({ page, context }) => {
   await context.route('**/api/auth/get-session', (route) => route.fulfill({ json: null }));
   await page.setViewportSize({ width: 320, height: 568 });
-  await page.goto('/');
-  await page.getByRole('button', { name: /Choose Finn,/ }).click();
-  await page.getByRole('button', { name: /Let.s play/ }).click();
-  await page.getByRole('link', { name: 'Pets', exact: true }).click();
-  await page.getByRole('button', { name: 'Talk to your companion' }).click();
-  await expect(page.getByRole('heading', { name: 'Talk to Finn' })).toBeVisible();
-  await expect(page.getByRole('link', { name: /Sign in to chat/ })).toBeVisible();
-  expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
-  await chooseCompanion(page, 'Chami');
-  await expect(page.getByRole('heading', { name: 'Talk to Chami' })).toBeVisible();
-  await page.getByRole('button', { name: 'Close dialog' }).click();
+  await page.goto('/habitat');
+  await expect(page).toHaveURL(/\/login$/);
+  await expect(page.getByRole('heading', { name: 'Welcome back.' })).toBeVisible();
+  await expect(page.getByText(/guest/i)).toHaveCount(0);
 });
 test('account chats persist separately, retry safely, clear one character and fit mobile/dark layouts', async ({
   page,

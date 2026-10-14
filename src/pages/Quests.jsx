@@ -11,7 +11,7 @@ export default function Quests() {
   const [query, setQuery] = useState(''),
     [filter, setFilter] = useState('active'),
     [category, setCategory] = useState('All'),
-    [sort, setSort] = useState('newest'),
+    [sort, setSort] = useState('due'),
     [page, setPage] = useState(0),
     [search, setSearch] = useState(false),
     [options, setOptions] = useState(false);
@@ -34,18 +34,24 @@ export default function Quests() {
       sort === 'reward'
         ? DIFFICULTIES[b.difficulty].coins - DIFFICULTIES[a.difficulty].coins
         : sort === 'due'
-          ? (a.due || '9999').localeCompare(b.due || '9999')
+          ? (a.due || '9999').localeCompare(b.due || '9999') || b.createdAt - a.createdAt
           : b.createdAt - a.createdAt,
     );
-  const size = window.innerHeight < 740 ? 4 : 5,
+  const counts = {
+    active: state.tasks.filter((task) => !completed(state, task, now)).length,
+    done: state.tasks.filter((task) => completed(state, task, now)).length,
+    all: state.tasks.length,
+  };
+  const size = window.innerHeight < 640 ? 3 : window.innerHeight < 740 ? 4 : 5,
     pages = Math.max(1, Math.ceil(list.length / size)),
     current = Math.min(page, pages - 1);
   return (
     <div className="compact-page quests-page">
-      <ScreenHeading title="Quests">
+      <ScreenHeading title="Tasks">
         <button
           className="icon-button"
           aria-label="Search quests"
+          aria-expanded={search}
           onClick={() => setSearch(!search)}
         >
           <Icon name="search" />
@@ -56,10 +62,10 @@ export default function Quests() {
         <button
           className="button primary new-quest-button"
           onClick={addQuest}
-          aria-label="Add a quest"
+          aria-label="New task"
         >
           <Icon name="plus" size={16} />
-          New quest
+          New task
         </button>
       </ScreenHeading>
       {search && (
@@ -68,7 +74,7 @@ export default function Quests() {
           <input
             autoFocus
             aria-label="Search quests"
-            placeholder="Find a quest"
+            placeholder="Find a task"
             value={query}
             onChange={(e) => setQuery(e.target.value)}
           />
@@ -82,21 +88,30 @@ export default function Quests() {
       <Segments
         label="Quest status"
         options={[
-          { id: 'active', name: 'Active', icon: 'flag' },
-          { id: 'done', name: 'Done', icon: 'done' },
-          { id: 'all', name: 'All', icon: 'book' },
+          { id: 'active', name: 'To do', icon: 'tasks', count: counts.active },
+          { id: 'done', name: 'Done', icon: 'done', count: counts.done },
+          { id: 'all', name: 'All', icon: 'book', count: counts.all },
         ]}
         value={filter}
         onChange={setFilter}
       />
+      {category !== 'All' && (
+        <div className="task-filter-chip">
+          <button onClick={() => setCategory('All')} aria-label="Clear category filter">
+            {category}
+            <Icon name="x" size={13} />
+          </button>
+        </div>
+      )}
       <section className="panel quest-journal">
         <div className="compact-list-head">
           <span>
-            {list.length} quests{category !== 'All' ? ` · ${category}` : ''}
+            {list.length} {list.length === 1 ? 'task' : 'tasks'}
+            {category !== 'All' ? ` · ${category}` : ''}
           </span>
           <button className="text-link" onClick={() => setOptions(true)}>
             <Icon name="filter" size={13} />
-            {sort === 'newest' ? 'Recent' : sort === 'reward' ? 'Reward' : 'Due'}
+            {sort === 'newest' ? 'Newest' : sort === 'reward' ? 'Reward' : 'Due first'}
           </button>
         </div>
         <div className="paged-quests">
@@ -108,14 +123,14 @@ export default function Quests() {
               <Icon name="flag" size={25} />
               <strong>
                 {query
-                  ? 'No matching quests'
+                  ? 'No matching tasks'
                   : filter === 'done'
-                    ? 'No completed quests yet'
+                    ? 'No completed tasks yet'
                     : 'All clear'}
               </strong>
               <button className="text-link" onClick={addQuest}>
                 <Icon name="plus" size={15} />
-                New quest
+                Add task
               </button>
             </div>
           )}

@@ -104,7 +104,7 @@ export function PetScene({ large = false }) {
     </section>
   );
 }
-export function QuickCare({ focus = false, onFocus }) {
+export function QuickCare({ focus = false, onFocus, bag = true }) {
   const { state, user, now, act, busy } = useGame();
   const [drawer, setDrawer] = useState(null);
   let remaining = null;
@@ -158,10 +158,12 @@ export function QuickCare({ focus = false, onFocus }) {
             </span>
           </button>
         )}
-        <button onClick={() => setDrawer('bag')}>
-          <Icon name="backpack" size={23} />
-          <span>Bag</span>
-        </button>
+        {bag && (
+          <button onClick={() => setDrawer('bag')}>
+            <Icon name="backpack" size={23} />
+            <span>Bag</span>
+          </button>
+        )}
       </div>
       {drawer && (
         <Dialog title={drawer === 'focus' ? 'Focus' : 'Backpack'} onClose={() => setDrawer(null)}>
@@ -205,7 +207,8 @@ export function ItemBrowser({ mode = 'shop' }) {
       description: 'Your little patch of daydream. Always yours.',
     });
   }
-  const pageSize = mode === 'bag' ? (window.innerHeight < 700 ? 1 : 2) : 4;
+  const pageSize =
+    mode === 'bag' ? (window.innerHeight < 700 ? 1 : 2) : window.innerHeight < 660 ? 2 : 4;
   const pages = Math.ceil(items.length / pageSize),
     pageIndex = Math.min(page, Math.max(0, pages - 1));
   const visibleItems = items.slice(pageIndex * pageSize, (pageIndex + 1) * pageSize);
@@ -384,6 +387,17 @@ export function ItemBrowser({ mode = 'shop' }) {
               <ItemArt type={selected.art} />
             )}
             <p>{selected.description}</p>
+            {level < selected.level ? (
+              <p className="shop-requirement">Unlocks at level {selected.level}.</p>
+            ) : action(selected).type === 'item.buy' && state.coins < selected.cost ? (
+              <p className="shop-requirement">{selected.cost - state.coins} more coins to go.</p>
+            ) : null}
+            {(level < selected.level ||
+              (action(selected).type === 'item.buy' && state.coins < selected.cost)) && (
+              <Link className="text-link" to="/quests">
+                Earn with your tasks <Icon name="arrow" size={15} />
+              </Link>
+            )}
             <span className="item-effect">{effect(selected)}</span>
             <button
               className="button primary full-width"

@@ -10,7 +10,7 @@ export default async function handler(req, res) {
   if (!process.env.NEON_AUTH_BASE_URL || !process.env.DATABASE_URL)
     return res
       .status(503)
-      .json({ error: 'Account sync is not configured. Guest adventures are available.' });
+      .json({ error: 'Account sync is not configured. Please try again later.' });
   let owner, ownerName;
   try {
     ({ owner, name: ownerName } = await requireIdentity(req));
@@ -19,12 +19,10 @@ export default async function handler(req, res) {
   }
   try {
     if (req.method === 'GET')
-      return res
-        .status(200)
-        .json({
-          ...(await withOwner(owner, (c) => loadGame(c, owner, ownerName))),
-          admin: await hasAdminAccess(owner),
-        });
+      return res.status(200).json({
+        ...(await withOwner(owner, (c) => loadGame(c, owner, ownerName))),
+        admin: await hasAdminAccess(owner),
+      });
     const raw = typeof req.body === 'string' ? req.body : JSON.stringify(req.body || {});
     if (Buffer.byteLength(raw) > 12000)
       return res.status(413).json({ error: 'This request is too large.' });

@@ -1,8 +1,12 @@
 import { test, expect } from '@playwright/test';
-test('installed guest adventure reloads and earns rewards offline', async ({ page, context }) => {
+import { mockAccount } from './account-fixture.js';
+test('installed account adventure reloads and queues rewards offline', async ({
+  page,
+  context,
+}) => {
   test.skip(process.env.RUN_PWA_E2E !== '1', 'Requires a production preview at port 4175.');
-  await page.goto('http://127.0.0.1:4175');
-  await page.getByRole('button', { name: /Let.s play/ }).click();
+  await mockAccount(page, context);
+  await page.goto('http://127.0.0.1:4175/dashboard');
   await page.evaluate(() => navigator.serviceWorker.ready);
   // A freshly installed worker controls the next navigation in prompt-update mode.
   await page.reload();

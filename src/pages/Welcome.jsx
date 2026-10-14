@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { useGame } from '../context';
 import { createGame } from '../../shared/game';
 import { Brand } from '../Application';
@@ -7,14 +7,17 @@ import { HabitatArt } from '../components/PixelArt';
 import Icon from '../components/Icon';
 import { auth, cloudConfigured } from '../lib/cloud';
 import WelcomeStart from '../components/WelcomeStart';
+import SpritePet from '../components/SpritePet';
 export function Welcome() {
   return <WelcomeStart />;
 }
 export function Account({ recovery = false, reset = false }) {
   const { restore, toast, state, user } = useGame();
   const navigate = useNavigate();
-  const [signup, setSignup] = useState(false),
-    [email, setEmail] = useState(''),
+  const [params, setParams] = useSearchParams();
+  const signup = params.get('mode') === 'signup';
+  const [showPassword, setShowPassword] = useState(false);
+  const [email, setEmail] = useState(''),
     [password, setPassword] = useState(''),
     [name, setName] = useState(''),
     [busy, setBusy] = useState(false),
@@ -31,8 +34,7 @@ export function Account({ recovery = false, reset = false }) {
     setError('');
     setBusy(true);
     try {
-      if (!auth)
-        throw new Error('Cloud accounts are not configured yet. You can start a guest adventure.');
+      if (!auth) throw new Error('Sign-in is unavailable. Please try again later.');
       if (reset) {
         const token = new URLSearchParams(location.search).get('token');
         if (!token) throw new Error('Open the password reset link from your email first.');
@@ -56,12 +58,17 @@ export function Account({ recovery = false, reset = false }) {
           ? await auth.signUp.email({ email, password, name })
           : await auth.signIn.email({ email, password });
         check(result);
-        const session = await auth.getSession();
-        if (!session.data?.user && signup) {
+        const response = await fetch('/api/auth/get-session', {
+          credentials: 'same-origin',
+          cache: 'no-store',
+          signal: AbortSignal.timeout(10000),
+        });
+        if (!response.ok) throw new Error('Could not open your account. Please try again.');
+        const session = await response.json();
+        if (!session?.user && signup) {
           setVerify(true);
           check(await auth.emailOtp.sendVerificationOtp({ email, type: 'email-verification' }));
-        } else if (!session.data?.user)
-          throw new Error('Please verify your email before signing in.');
+        } else if (!session?.user) throw new Error('Please verify your email before signing in.');
         else {
           await restore();
           navigate('/dashboard');
@@ -74,68 +81,61 @@ export function Account({ recovery = false, reset = false }) {
     }
   };
   return (
-    <div className="account-page">
+    <div className={`account-page fresh-account ${signup ? 'signup-account' : ''}`}>
       <Link className="account-brand brand-link" to="/">
         <Brand />
       </Link>
       <main id="main-content" className="account-layout">
         <aside className="account-story">
-          <span className="pixel-label">YOUR PROGRESS, WHEREVER YOU GO</span>
+          <span className="welcome-kicker">
+            <Icon name="sprout" size={15} /> A gentler daily rhythm
+          </span>
           <h1>
-            Your little world.
+            A little focus.
             <br />
-            <span>Always with you.</span>
+            <span>A lot of heart.</span>
           </h1>
           <HabitatArt state={state || createGame()} />
-          <p>
-            Small quests. A growing companion.
-            <br />A little more joy in your everyday.
-          </p>
+          <p>Plan your day. Celebrate your progress.</p>
         </aside>
         <section className="account-card panel">
-          <Link to={state ? '/dashboard' : '/'} className="text-link">
-            <Icon name="back" size={16} />
-            Back to your world
-          </Link>
-          <span className="eyebrow">
-            {verify
-              ? 'ONE LITTLE CHECK'
-              : recovery || reset
-                ? 'FIND YOUR WAY BACK'
-                : signup
-                  ? 'START A CLOUD ADVENTURE'
-                  : 'WELCOME BACK, ADVENTURER'}
-          </span>
-          <h2>
+          <div className="account-greeting">
+            <SpritePet species="cat" mood="happy" />
+            <span>
+              {signup ? 'Your little friend is ready.' : 'One small step. I’m with you.'}
+              <Icon name="heart" size={13} />
+            </span>
+          </div>
+          <h1>
             {verify
               ? 'Check your inbox.'
               : reset
-                ? 'A fresh password.'
+                ? 'A fresh start.'
                 : recovery
-                  ? 'Let’s get you back in.'
+                  ? 'Let’s get you back.'
                   : signup
                     ? 'Make yourself at home.'
-                    : 'Your world is waiting.'}
-          </h2>
+                    : 'Welcome back.'}
+          </h1>
           <p>
             {verify
               ? `Enter the verification code sent to ${email}.`
               : recovery
-                ? 'We’ll email you a link to reset your password.'
+                ? 'We’ll send a password reset link.'
                 : reset
-                  ? 'Choose a new password for your adventure.'
-                  : 'Sign in to save your cloud adventure across devices.'}
+                  ? 'Choose a new password.'
+                  : signup
+                    ? 'A place for your tasks and tiny wins.'
+                    : 'Your tasks. Your friend. Your little wins.'}
           </p>
           {!cloudConfigured && (
-            <div className="inline-warning">
-              Cloud accounts are not connected. Guest mode is fully playable.
-            </div>
+            <div className="inline-warning">Sign-in is unavailable. Please try again later.</div>
           )}
           {user && !recovery && !reset ? (
             <>
               <p>You’re signed in as {user.email}.</p>
               <Link className="button primary full-width" to="/dashboard">
-                Continue adventure
+                Open my day
                 <Icon name="arrow" size={18} />
               </Link>
             </>
@@ -155,12 +155,15 @@ export function Account({ recovery = false, reset = false }) {
           ) : (
             <form onSubmit={submit}>
               {!recovery && !reset && !verify && (
-                <div className="tabs account-tabs">
+                <div className="tabs account-tabs" role="group" aria-label="Account mode">
                   <button
                     type="button"
                     className={!signup ? 'active' : ''}
+                    aria-pressed={!signup}
+                    disabled={busy}
                     onClick={() => {
-                      setSignup(false);
+                      setParams({}, { replace: true });
+                      setShowPassword(false);
                       setError('');
                     }}
                   >
@@ -169,8 +172,11 @@ export function Account({ recovery = false, reset = false }) {
                   <button
                     type="button"
                     className={signup ? 'active' : ''}
+                    aria-pressed={signup}
+                    disabled={busy}
                     onClick={() => {
-                      setSignup(true);
+                      setParams({ mode: 'signup' }, { replace: true });
+                      setShowPassword(false);
                       setError('');
                     }}
                   >
@@ -186,7 +192,7 @@ export function Account({ recovery = false, reset = false }) {
                     maxLength={30}
                     value={name}
                     onChange={(e) => setName(e.target.value)}
-                    placeholder="What should we call you?"
+                    placeholder="Your first name"
                     autoComplete="name"
                   />
                 </label>
@@ -194,29 +200,46 @@ export function Account({ recovery = false, reset = false }) {
               {!reset && !verify && (
                 <label>
                   Email address
-                  <input
-                    type="email"
-                    required
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    placeholder="you@example.com"
-                    autoComplete="email"
-                  />
+                  <span className="account-input">
+                    <Icon name="mail" size={18} />
+                    <input
+                      type="email"
+                      required
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
+                      placeholder="you@example.com"
+                      autoComplete="email"
+                    />
+                  </span>
                 </label>
               )}
               {!recovery && !verify && (
-                <label>
+                <label htmlFor="account-password">
                   Password
-                  <input
-                    type="password"
-                    required
-                    minLength={8}
-                    maxLength={128}
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    placeholder="At least 8 characters"
-                    autoComplete={signup || reset ? 'new-password' : 'current-password'}
-                  />
+                  <span className="account-input password-input">
+                    <Icon name="lock" size={18} />
+                    <input
+                      id="account-password"
+                      aria-label="Password"
+                      type={showPassword ? 'text' : 'password'}
+                      required
+                      minLength={8}
+                      maxLength={128}
+                      value={password}
+                      onChange={(e) => setPassword(e.target.value)}
+                      placeholder={signup || reset ? 'At least 8 characters' : 'Your password'}
+                      autoComplete={signup || reset ? 'new-password' : 'current-password'}
+                    />
+                    <button
+                      type="button"
+                      className="password-reveal"
+                      aria-label={showPassword ? 'Hide password' : 'Show password'}
+                      aria-pressed={showPassword}
+                      onClick={() => setShowPassword(!showPassword)}
+                    >
+                      <Icon name={showPassword ? 'eye-off' : 'eye'} size={18} />
+                    </button>
+                  </span>
                 </label>
               )}
               {verify && (
@@ -235,7 +258,7 @@ export function Account({ recovery = false, reset = false }) {
               )}
               {!signup && !recovery && !reset && !verify && (
                 <Link to="/forgot-password" className="text-link forgot-link">
-                  Forgot your password?
+                  Forgot password?
                 </Link>
               )}
               {error && (
@@ -243,9 +266,13 @@ export function Account({ recovery = false, reset = false }) {
                   {error}
                 </p>
               )}
-              <button className="button primary full-width" disabled={busy || !cloudConfigured}>
+              <button
+                type="submit"
+                className="button primary full-width"
+                disabled={busy || !cloudConfigured}
+              >
                 {busy
-                  ? 'Just a moment…'
+                  ? 'Opening your day…'
                   : verify
                     ? 'Verify & continue'
                     : recovery
@@ -253,8 +280,8 @@ export function Account({ recovery = false, reset = false }) {
                       : reset
                         ? 'Save new password'
                         : signup
-                          ? 'Create my adventure'
-                          : 'Continue adventure'}
+                          ? 'Create account'
+                          : 'Sign in'}
                 <Icon name="arrow" size={17} />
               </button>
               {verify && (
@@ -279,16 +306,15 @@ export function Account({ recovery = false, reset = false }) {
                     }
                   }}
                 >
-                  Send a fresh code
+                  Resend code
                 </button>
               )}
             </form>
           )}
           {!recovery && !reset && (
-            <p className="account-guest-note">
-              Guest and cloud adventures are separate. <Link to="/">Play as a guest</Link>—no
-              account needed.
-            </p>
+            <span className="account-footer">
+              <Icon name="cloud" size={13} /> Your progress, wherever you go.
+            </span>
           )}
         </section>
       </main>
